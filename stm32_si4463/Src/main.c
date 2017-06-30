@@ -62,7 +62,7 @@ static void MX_NVIC_Init(void);
 
 /* USER CODE BEGIN PFP */
 /* Private function prototypes -----------------------------------------------*/
-
+void TEST_SPI1_Transmit(void);
 /* USER CODE END PFP */
 
 /* USER CODE BEGIN 0 */
@@ -113,9 +113,20 @@ int main(void)
   /* USER CODE BEGIN 3 */
 	  HAL_GPIO_TogglePin(LED_ONBOARD_GPIO_Port, LED_ONBOARD_Pin);
 	  HAL_Delay(100); //delay 100ms
+	  TEST_SPI1_Transmit();
+
   }
   /* USER CODE END 3 */
 
+}
+
+void TEST_SPI1_Transmit(void)
+{
+	uint8_t test_data = 0xA7;
+	uint16_t test_size = 0x01;
+	uint32_t test_timeout = 10;
+
+	HAL_SPI_Transmit(&hspi1, &test_data, test_size, test_timeout);
 }
 
 /** System Clock Configuration
