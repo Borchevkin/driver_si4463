@@ -283,12 +283,7 @@ static void MX_GPIO_Init(void)
 
 void TEST_SPI1_Transmit(void)
 {
-	uint8_t txData[1] = {0x01};
-	uint8_t rxData[9] = {0};
-
-	//HAL_GPIO_WritePin(nSEL_GPIO_Port, nSEL_Pin, GPIO_PIN_RESET);
-	//SI4463_ReadWrite(txData, rxData, 1);
-	//HAL_GPIO_WritePin(nSEL_GPIO_Port, nSEL_Pin, GPIO_PIN_SET);
+	uint8_t rxData[SI4463_CMD_BUF_LEN] = {0};
 	SI4463_GetPartInfo(&si4463, rxData);
 }
 

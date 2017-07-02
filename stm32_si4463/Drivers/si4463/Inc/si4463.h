@@ -10,15 +10,21 @@
 
 #include <stdint.h>
 #include <stdbool.h>
+#include <string.h>
 #include "radio_config_Si4463.h"
 
 /* Define section */
+
+/*Values*/
+#define SI4463_CMD_BUF_LEN				(17)
+
+/*Commands*/
 #define SI4463_CMD_PART_INFO			(0x01)
+#define SI4463_CMD_READ_CMD_BUF			(0x44)
 
 /* End Define section */
 
 /* Const section  */
-
 
 /* End of const section */
 
@@ -36,6 +42,8 @@ typedef struct
 
 /* Prototypes section */
 
+void SI4463_SendCommand(si4463_t * si4463, uint8_t * cmdChain, uint16_t cmdLen);
+void SI4463_ReadCommandBuffer(si4463_t * si4463, uint8_t * cmdBuf);
 void SI4463_Init(si4463_t * si4463);
 void SI4463_GetPartInfo(si4463_t * si4463, uint8_t * pRxData);
 void SI4463_ClearAllInterrupts(void);
