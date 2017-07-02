@@ -40,6 +40,7 @@
 #include "stm32f1xx_hal.h"
 
 /* USER CODE BEGIN Includes */
+#include "si4463.h"
 
 /* USER CODE END Includes */
 
@@ -50,6 +51,8 @@ UART_HandleTypeDef huart1;
 
 /* USER CODE BEGIN PV */
 /* Private variables ---------------------------------------------------------*/
+si4463_t si4463;
+
 
 /* USER CODE END PV */
 
@@ -63,6 +66,12 @@ static void MX_NVIC_Init(void);
 /* USER CODE BEGIN PFP */
 /* Private function prototypes -----------------------------------------------*/
 void TEST_SPI1_Transmit(void);
+void SI4463_WriteRead(uint8_t * pTxData, uint8_t * pRxData, uint16_t sizeTxData);
+void SI4463_SetShutdown(void);
+void SI4463_ClearShutdown(void);
+void SI4463_Select(void);
+void SI4463_Deselect(void);
+
 /* USER CODE END PFP */
 
 /* USER CODE BEGIN 0 */
@@ -101,6 +110,13 @@ int main(void)
   MX_NVIC_Init();
 
   /* USER CODE BEGIN 2 */
+  si4463.WriteRead = SI4463_WriteRead;
+  si4463.Select = SI4463_Select;
+  si4463.Deselect = SI4463_Deselect;
+  si4463.SetShutdown = SI4463_SetShutdown;
+  si4463.ClearShurdown = SI4463_ClearShutdown;
+  si4463.DelayMs = HAL_Delay;
+  SI4463_Init(&si4463);
 
   /* USER CODE END 2 */
 
@@ -112,21 +128,12 @@ int main(void)
 
   /* USER CODE BEGIN 3 */
 	  HAL_GPIO_TogglePin(LED_ONBOARD_GPIO_Port, LED_ONBOARD_Pin);
-	  HAL_Delay(100); //delay 100ms
+	  HAL_Delay(1000); //delay 100ms
 	  TEST_SPI1_Transmit();
 
   }
   /* USER CODE END 3 */
 
-}
-
-void TEST_SPI1_Transmit(void)
-{
-	uint8_t test_data = 0xA7;
-	uint16_t test_size = 0x01;
-	uint32_t test_timeout = 10;
-
-	HAL_SPI_Transmit(&hspi1, &test_data, test_size, test_timeout);
 }
 
 /** System Clock Configuration
@@ -196,7 +203,7 @@ static void MX_SPI1_Init(void)
   hspi1.Init.DataSize = SPI_DATASIZE_8BIT;
   hspi1.Init.CLKPolarity = SPI_POLARITY_LOW;
   hspi1.Init.CLKPhase = SPI_PHASE_1EDGE;
-  hspi1.Init.NSS = SPI_NSS_HARD_OUTPUT;
+  hspi1.Init.NSS = SPI_NSS_SOFT;
   hspi1.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_16;
   hspi1.Init.FirstBit = SPI_FIRSTBIT_MSB;
   hspi1.Init.TIMode = SPI_TIMODE_DISABLE;
@@ -250,7 +257,7 @@ static void MX_GPIO_Init(void)
   HAL_GPIO_WritePin(LED_ONBOARD_GPIO_Port, LED_ONBOARD_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(nSEL_GPIO_Port, nSEL_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOB, nSEL_Pin|SHUTDOWN_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin : LED_ONBOARD_Pin */
   GPIO_InitStruct.Pin = LED_ONBOARD_Pin;
@@ -264,15 +271,51 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(nIRQ_GPIO_Port, &GPIO_InitStruct);
 
-  /*Configure GPIO pin : nSEL_Pin */
-  GPIO_InitStruct.Pin = nSEL_Pin;
+  /*Configure GPIO pins : nSEL_Pin SHUTDOWN_Pin */
+  GPIO_InitStruct.Pin = nSEL_Pin|SHUTDOWN_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-  HAL_GPIO_Init(nSEL_GPIO_Port, &GPIO_InitStruct);
+  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
 }
 
 /* USER CODE BEGIN 4 */
+
+void TEST_SPI1_Transmit(void)
+{
+	uint8_t txData[1] = {0x01};
+	uint8_t rxData[9] = {0};
+
+	//HAL_GPIO_WritePin(nSEL_GPIO_Port, nSEL_Pin, GPIO_PIN_RESET);
+	//SI4463_ReadWrite(txData, rxData, 1);
+	//HAL_GPIO_WritePin(nSEL_GPIO_Port, nSEL_Pin, GPIO_PIN_SET);
+	SI4463_GetPartInfo(&si4463, rxData);
+}
+
+void SI4463_WriteRead(uint8_t * pTxData, uint8_t * pRxData, uint16_t sizeTxData)
+{
+	HAL_SPI_TransmitReceive(&hspi1, pTxData, pRxData, sizeTxData, 100);
+}
+
+void SI4463_SetShutdown(void)
+{
+	HAL_GPIO_WritePin(SHUTDOWN_GPIO_Port, SHUTDOWN_Pin, GPIO_PIN_SET);
+}
+
+void SI4463_ClearShutdown(void)
+{
+	HAL_GPIO_WritePin(SHUTDOWN_GPIO_Port, SHUTDOWN_Pin, GPIO_PIN_RESET);
+}
+
+void SI4463_Select(void)
+{
+	HAL_GPIO_WritePin(nSEL_GPIO_Port, nSEL_Pin, GPIO_PIN_RESET);
+}
+
+void SI4463_Deselect(void)
+{
+	HAL_GPIO_WritePin(nSEL_GPIO_Port, nSEL_Pin, GPIO_PIN_SET);
+}
 
 /* USER CODE END 4 */
 

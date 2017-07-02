@@ -10,19 +10,41 @@
 
 #include <stdint.h>
 #include <stdbool.h>
+#include "radio_config_Si4463.h"
 
 /* Define section */
+#define SI4463_CMD_PART_INFO			(0x01)
 
 /* End Define section */
-#define SI4463_MAX_BUFFER_LEN		(32)
+
+/* Const section  */
+
+
+/* End of const section */
+
+/* Types section */
+typedef struct
+{
+	void (*WriteRead)(uint8_t * pTxData, uint8_t * pRxData, uint16_t txSize);
+	void (*SetShutdown)(void);
+	void (*ClearShurdown)(void);
+	void (*Select)(void);
+	void (*Deselect)(void);
+	void (*DelayMs)(uint32_t delayMs);
+} si4463_t;
+/* End types section */
 
 /* Prototypes section */
 
-void SI4463_Init(void);
-bool SI4463_Transmit(uint8_t * msg, uint8_t len);
+void SI4463_Init(si4463_t * si4463);
+void SI4463_GetPartInfo(si4463_t * si4463, uint8_t * pRxData);
+void SI4463_ClearAllInterrupts(void);
+void SI4463_Transmit(uint8_t * msg, uint8_t len);
 void SI4463_Receive(uint8_t * msg, uint8_t len);
 
 /* End of prototypes section */
+
+/* Config */
 
 
 #endif /* INC_SI4463_H_ */

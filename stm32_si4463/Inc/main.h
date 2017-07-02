@@ -52,6 +52,8 @@
 #define nIRQ_GPIO_Port GPIOB
 #define nSEL_Pin GPIO_PIN_1
 #define nSEL_GPIO_Port GPIOB
+#define SHUTDOWN_Pin GPIO_PIN_2
+#define SHUTDOWN_GPIO_Port GPIOB
 
 /* USER CODE BEGIN Private defines */
 
