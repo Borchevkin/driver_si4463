@@ -380,10 +380,10 @@
       </grbModemInterrupt>
       <grbPacketHandlerInterrupt Type="System.Windows.Forms.GroupBox">
         <DataItem Type="System.Windows.Forms.CheckBox" Name="chbEnablePacketHandlerInterrupt">
-          <Checked>False</Checked>
+          <Checked>True</Checked>
         </DataItem>
         <DataItem Type="NewWDS.Applications.App_Common.ByteStatusControl.ByteStatus" Name="bstPacketHandlerInterruptStatus">
-          <Enabled>False</Enabled>
+          <Enabled>True</Enabled>
           <Value>0</Value>
         </DataItem>
       </grbPacketHandlerInterrupt>
@@ -392,16 +392,16 @@
     <tbpGPIO Type="System.Windows.Forms.TabPage">
       <grbFastResponseRegisters Type="System.Windows.Forms.GroupBox">
         <DataItem Type="System.Windows.Forms.ComboBox" Name="cbbFrrA">
-          <SelectedIndex>1</SelectedIndex>
+          <SelectedIndex>0</SelectedIndex>
         </DataItem>
         <DataItem Type="System.Windows.Forms.ComboBox" Name="cbbFrrC">
-          <SelectedIndex>9</SelectedIndex>
+          <SelectedIndex>0</SelectedIndex>
         </DataItem>
         <DataItem Type="System.Windows.Forms.ComboBox" Name="cbbFrrD">
-          <SelectedIndex>10</SelectedIndex>
+          <SelectedIndex>0</SelectedIndex>
         </DataItem>
         <DataItem Type="System.Windows.Forms.ComboBox" Name="cbbFrrB">
-          <SelectedIndex>7</SelectedIndex>
+          <SelectedIndex>0</SelectedIndex>
         </DataItem>
       </grbFastResponseRegisters>
       <grbGPIO Type="System.Windows.Forms.GroupBox">
@@ -433,7 +433,7 @@
           <Checked>False</Checked>
         </DataItem>
         <DataItem Type="System.Windows.Forms.ComboBox" Name="cbbNirq">
-          <SelectedIndex>DONOTHING</SelectedIndex>
+          <SelectedIndex>Active low interrupt signal</SelectedIndex>
         </DataItem>
         <DataItem Type="System.Windows.Forms.CheckBox" Name="chbSdoPullup">
           <Checked>False</Checked>

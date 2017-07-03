@@ -40,7 +40,6 @@
 /* USER CODE END 0 */
 
 /* External variables --------------------------------------------------------*/
-extern SPI_HandleTypeDef hspi1;
 extern UART_HandleTypeDef huart1;
 
 /******************************************************************************/
@@ -186,17 +185,21 @@ void SysTick_Handler(void)
 /******************************************************************************/
 
 /**
-* @brief This function handles SPI1 global interrupt.
+* @brief This function handles EXTI line0 interrupt.
 */
-void SPI1_IRQHandler(void)
+void EXTI0_IRQHandler(void)
 {
-  /* USER CODE BEGIN SPI1_IRQn 0 */
+  /* USER CODE BEGIN EXTI0_IRQn 0 */
+  //HAL_GPIO_TogglePin(LED_ONBOARD_GPIO_Port, LED_ONBOARD_Pin);
+  //HAL_Delay(200); //delay 100ms
+  HAL_GPIO_TogglePin(LED_ONBOARD_GPIO_Port, LED_ONBOARD_Pin);
+  //HAL_Delay(200);
 
-  /* USER CODE END SPI1_IRQn 0 */
-  HAL_SPI_IRQHandler(&hspi1);
-  /* USER CODE BEGIN SPI1_IRQn 1 */
+  /* USER CODE END EXTI0_IRQn 0 */
+  HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_0);
+  /* USER CODE BEGIN EXTI0_IRQn 1 */
 
-  /* USER CODE END SPI1_IRQn 1 */
+  /* USER CODE END EXTI0_IRQn 1 */
 }
 
 /**

@@ -21,6 +21,7 @@
 /*Commands*/
 #define SI4463_CMD_PART_INFO			(0x01)
 #define SI4463_CMD_READ_CMD_BUF			(0x44)
+#define SI4463_CMD_GET_INT_STATUS		(0x20)
 
 /* End Define section */
 
@@ -46,7 +47,9 @@ void SI4463_SendCommand(si4463_t * si4463, uint8_t * cmdChain, uint16_t cmdLen);
 void SI4463_ReadCommandBuffer(si4463_t * si4463, uint8_t * cmdBuf);
 void SI4463_Init(si4463_t * si4463);
 void SI4463_GetPartInfo(si4463_t * si4463, uint8_t * pRxData);
-void SI4463_ClearAllInterrupts(void);
+void SI4463_ClearAllInterrupts(si4463_t * si4463);
+void SI4463_SetRxState(si4463_t * si4463);
+void SI4463_SetTxState(si4463_t * si4463);
 void SI4463_Transmit(uint8_t * msg, uint8_t len);
 void SI4463_Receive(uint8_t * msg, uint8_t len);
 

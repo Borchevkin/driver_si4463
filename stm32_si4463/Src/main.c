@@ -117,6 +117,7 @@ int main(void)
   si4463.ClearShurdown = SI4463_ClearShutdown;
   si4463.DelayMs = HAL_Delay;
   SI4463_Init(&si4463);
+  SI4463_ClearAllInterrupts(&si4463);
 
   /* USER CODE END 2 */
 
@@ -128,9 +129,8 @@ int main(void)
 
   /* USER CODE BEGIN 3 */
 	  HAL_GPIO_TogglePin(LED_ONBOARD_GPIO_Port, LED_ONBOARD_Pin);
-	  HAL_Delay(1000); //delay 100ms
-	  TEST_SPI1_Transmit();
-
+	  HAL_Delay(100); //delay 100ms
+	  SI4463_ClearAllInterrupts(&si4463);
   }
   /* USER CODE END 3 */
 
@@ -185,9 +185,9 @@ void SystemClock_Config(void)
 */
 static void MX_NVIC_Init(void)
 {
-  /* SPI1_IRQn interrupt configuration */
-  HAL_NVIC_SetPriority(SPI1_IRQn, 0, 0);
-  HAL_NVIC_EnableIRQ(SPI1_IRQn);
+  /* EXTI0_IRQn interrupt configuration */
+  HAL_NVIC_SetPriority(EXTI0_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(EXTI0_IRQn);
   /* USART1_IRQn interrupt configuration */
   HAL_NVIC_SetPriority(USART1_IRQn, 0, 0);
   HAL_NVIC_EnableIRQ(USART1_IRQn);
@@ -267,7 +267,7 @@ static void MX_GPIO_Init(void)
 
   /*Configure GPIO pin : nIRQ_Pin */
   GPIO_InitStruct.Pin = nIRQ_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+  GPIO_InitStruct.Mode = GPIO_MODE_IT_FALLING;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(nIRQ_GPIO_Port, &GPIO_InitStruct);
 
