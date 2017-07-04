@@ -362,19 +362,19 @@
     <tbpInterrupts Type="System.Windows.Forms.TabPage">
       <grbChipInterrupt Type="System.Windows.Forms.GroupBox">
         <DataItem Type="System.Windows.Forms.CheckBox" Name="chbEnableChipInterrupt">
-          <Checked>False</Checked>
+          <Checked>True</Checked>
         </DataItem>
         <DataItem Type="NewWDS.Applications.App_Common.ByteStatusControl.ByteStatus" Name="bstChipInterruptStatus">
-          <Enabled>False</Enabled>
-          <Value>0</Value>
+          <Enabled>True</Enabled>
+          <Value>128</Value>
         </DataItem>
       </grbChipInterrupt>
       <grbModemInterrupt Type="System.Windows.Forms.GroupBox">
         <DataItem Type="System.Windows.Forms.CheckBox" Name="chbEnableModemInterrupt">
-          <Checked>False</Checked>
+          <Checked>True</Checked>
         </DataItem>
         <DataItem Type="NewWDS.Applications.App_Common.ByteStatusControl.ByteStatus" Name="bstModemInterruptStatus">
-          <Enabled>False</Enabled>
+          <Enabled>True</Enabled>
           <Value>0</Value>
         </DataItem>
       </grbModemInterrupt>
@@ -384,7 +384,7 @@
         </DataItem>
         <DataItem Type="NewWDS.Applications.App_Common.ByteStatusControl.ByteStatus" Name="bstPacketHandlerInterruptStatus">
           <Enabled>True</Enabled>
-          <Value>0</Value>
+          <Value>16</Value>
         </DataItem>
       </grbPacketHandlerInterrupt>
       <grbColorDescrition Type="System.Windows.Forms.GroupBox" />
@@ -430,7 +430,7 @@
           <SelectedIndex>DONOTHING</SelectedIndex>
         </DataItem>
         <DataItem Type="System.Windows.Forms.CheckBox" Name="chbNirqPullup">
-          <Checked>False</Checked>
+          <Checked>True</Checked>
         </DataItem>
         <DataItem Type="System.Windows.Forms.ComboBox" Name="cbbNirq">
           <SelectedIndex>Active low interrupt signal</SelectedIndex>

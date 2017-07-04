@@ -48,13 +48,13 @@
 
 #define LED_ONBOARD_Pin GPIO_PIN_13
 #define LED_ONBOARD_GPIO_Port GPIOC
+#define SHUTDOWN_Pin GPIO_PIN_3
+#define SHUTDOWN_GPIO_Port GPIOA
 #define nIRQ_Pin GPIO_PIN_0
 #define nIRQ_GPIO_Port GPIOB
 #define nIRQ_EXTI_IRQn EXTI0_IRQn
 #define nSEL_Pin GPIO_PIN_1
 #define nSEL_GPIO_Port GPIOB
-#define SHUTDOWN_Pin GPIO_PIN_2
-#define SHUTDOWN_GPIO_Port GPIOB
 
 /* USER CODE BEGIN Private defines */
 

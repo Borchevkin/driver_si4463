@@ -52,7 +52,7 @@ UART_HandleTypeDef huart1;
 /* USER CODE BEGIN PV */
 /* Private variables ---------------------------------------------------------*/
 si4463_t si4463;
-
+uint8_t buffer[SI4463_CMD_BUF_LEN] = {0};
 
 /* USER CODE END PV */
 
@@ -110,14 +110,20 @@ int main(void)
   MX_NVIC_Init();
 
   /* USER CODE BEGIN 2 */
+  /* Assign functions */
   si4463.WriteRead = SI4463_WriteRead;
   si4463.Select = SI4463_Select;
   si4463.Deselect = SI4463_Deselect;
   si4463.SetShutdown = SI4463_SetShutdown;
   si4463.ClearShurdown = SI4463_ClearShutdown;
   si4463.DelayMs = HAL_Delay;
+  /* Init Si4463 with structure */
   SI4463_Init(&si4463);
-  SI4463_ClearAllInterrupts(&si4463);
+  //GetChip status clear pending interrupt invoked by wrond CMD
+  //TODO fix this
+  SI4463_GetChipStatus(&si4463, buffer);
+  /*Set Si4463 permanently in RX state */
+  SI4463_SetRxState(&si4463);
 
   /* USER CODE END 2 */
 
@@ -130,7 +136,13 @@ int main(void)
   /* USER CODE BEGIN 3 */
 	  HAL_GPIO_TogglePin(LED_ONBOARD_GPIO_Port, LED_ONBOARD_Pin);
 	  HAL_Delay(100); //delay 100ms
+	  si4463_interrupts_t interrupts;
+	  SI4463_GetInterrupts(&si4463, &interrupts);
 	  SI4463_ClearAllInterrupts(&si4463);
+	  //SI4463_GetChipStatus(&si4463, buffer);
+	  //SI4463_ClearChipStatus(&si4463);
+	  SI4463_GetCurrentState(&si4463, buffer);
+	  SI4463_GetPartInfo(&si4463, buffer);
   }
   /* USER CODE END 3 */
 
@@ -257,7 +269,10 @@ static void MX_GPIO_Init(void)
   HAL_GPIO_WritePin(LED_ONBOARD_GPIO_Port, LED_ONBOARD_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOB, nSEL_Pin|SHUTDOWN_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(SHUTDOWN_GPIO_Port, SHUTDOWN_Pin, GPIO_PIN_RESET);
+
+  /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(nSEL_GPIO_Port, nSEL_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin : LED_ONBOARD_Pin */
   GPIO_InitStruct.Pin = LED_ONBOARD_Pin;
@@ -265,17 +280,23 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(LED_ONBOARD_GPIO_Port, &GPIO_InitStruct);
 
+  /*Configure GPIO pin : SHUTDOWN_Pin */
+  GPIO_InitStruct.Pin = SHUTDOWN_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(SHUTDOWN_GPIO_Port, &GPIO_InitStruct);
+
   /*Configure GPIO pin : nIRQ_Pin */
   GPIO_InitStruct.Pin = nIRQ_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_IT_FALLING;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(nIRQ_GPIO_Port, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : nSEL_Pin SHUTDOWN_Pin */
-  GPIO_InitStruct.Pin = nSEL_Pin|SHUTDOWN_Pin;
+  /*Configure GPIO pin : nSEL_Pin */
+  GPIO_InitStruct.Pin = nSEL_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+  HAL_GPIO_Init(nSEL_GPIO_Port, &GPIO_InitStruct);
 
 }
 

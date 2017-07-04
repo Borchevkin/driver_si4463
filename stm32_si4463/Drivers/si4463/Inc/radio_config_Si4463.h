@@ -50,7 +50,7 @@
 // Command:                  RF_GPIO_PIN_CFG
 // Description:              Configures the GPIO pins.
 */
-#define RF_GPIO_PIN_CFG 0x13, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+#define RF_GPIO_PIN_CFG 0x13, 0x08, 0x09, 0x00, 0x00, 0x00, 0x00, 0x00
 
 /*
 // Set properties:           RF_GLOBAL_XO_TUNE_2
@@ -87,7 +87,7 @@
 //   INT_CTL_MODEM_ENABLE - Enable individual interrupt sources within the Modem Interrupt Group to generate a HW interrupt on the NIRQ output pin.
 //   INT_CTL_CHIP_ENABLE - Enable individual interrupt sources within the Chip Interrupt Group to generate a HW interrupt on the NIRQ output pin.
 */
-#define RF_INT_CTL_ENABLE_4 0x11, 0x01, 0x04, 0x00, 0x07, 0x10, 0x00, 0x1C
+#define RF_INT_CTL_ENABLE_4 0x11, 0x01, 0x04, 0x00, 0x07, 0x10, 0x00, 0x80
 
 /*
 // Set properties:           RF_FRR_CTL_A_MODE_4
