@@ -54,7 +54,7 @@
 #define SI4463_CMD_FRR_D_READ			(0x57)
 
 #define SI4463_CMD_WRITE_TX_FIFO		(0x66)
-#define SI4463_CMD_WRITE_RX_FIFO		(0x77)
+#define SI4463_CMD_READ_RX_FIFO			(0x77)
 
 #define SI4463_CMD_RX_HOP				(0x36)
 
@@ -65,11 +65,39 @@
 
 /* End Define section */
 
-/* Const section  */
+/* Const section */
 
 /* End of const section */
 
 /* Types section */
+typedef struct
+{
+	/* PH interrupts */
+	bool filterMatch;
+	bool filterMiss;
+	bool packetSent;
+	bool packetRx;
+	bool crcError;
+	bool txFifoAlmostEmpty;
+	bool rxFifoAlmostFull;
+	/* Modem interrupts */
+	bool postambleDetect;
+	bool invalidSync;
+	bool rssiJump;
+	bool rssi;
+	bool invalidPreamble;
+	bool preambleDetect;
+	bool syncDetect;
+	/* Chip interrupts */
+	bool cal;
+	bool fifoUnderflowOverflowError;
+	bool stateChange;
+	bool cmdError;
+	bool chipReady;
+	bool lowBatt;
+	bool wut;
+} si4463_interrupts_t;
+
 typedef struct
 {
 	void (*WriteRead)(uint8_t * pTxData, uint8_t * pRxData, uint16_t txSize);
@@ -78,19 +106,9 @@ typedef struct
 	void (*Select)(void);
 	void (*Deselect)(void);
 	void (*DelayMs)(uint32_t delayMs);
+	si4463_interrupts_t interrupts;
 } si4463_t;
 
-typedef struct
-{
-	uint8_t INT_PEND;
-	uint8_t INT_STATUS;
-	uint8_t PH_PEND;
-	uint8_t PH_STATUS;
-	uint8_t MODEM_PEND;
-	uint8_t MODEM_STATUS;
-	uint8_t CHIP_PEND;
-	uint8_t CHIP_STATUS;
-} si4463_interrupts_t;
 /* End types section */
 
 /* Prototypes section */
@@ -103,7 +121,7 @@ void SI4463_Reset(si4463_t * si4463);
 void SI4463_GetPartInfo(si4463_t * si4463, uint8_t * pRxData);
 void SI4463_GetChipStatus(si4463_t * si4463, uint8_t * pRxData);
 void SI4463_ClearChipStatus(si4463_t * si4463);
-void SI4463_GetInterrupts(si4463_t * si4463, si4463_interrupts_t * interrupts);
+void SI4463_GetInterrupts(si4463_t * si4463);
 void SI4463_ClearAllInterrupts(si4463_t * si4463);
 void SI4463_GetCurrentState(si4463_t * si4463, uint8_t * state);
 void SI4463_SetRxState(si4463_t * si4463);

@@ -65,7 +65,6 @@ static void MX_NVIC_Init(void);
 
 /* USER CODE BEGIN PFP */
 /* Private function prototypes -----------------------------------------------*/
-void TEST_SPI1_Transmit(void);
 void SI4463_WriteRead(uint8_t * pTxData, uint8_t * pRxData, uint16_t sizeTxData);
 void SI4463_SetShutdown(void);
 void SI4463_ClearShutdown(void);
@@ -110,6 +109,7 @@ int main(void)
   MX_NVIC_Init();
 
   /* USER CODE BEGIN 2 */
+
   /* Assign functions */
   si4463.WriteRead = SI4463_WriteRead;
   si4463.Select = SI4463_Select;
@@ -117,11 +117,10 @@ int main(void)
   si4463.SetShutdown = SI4463_SetShutdown;
   si4463.ClearShurdown = SI4463_ClearShutdown;
   si4463.DelayMs = HAL_Delay;
+
   /* Init Si4463 with structure */
-  //__disable_irq();
   SI4463_Init(&si4463);
-  //__enable_irq();
-  SI4463_GetChipStatus(&si4463, buffer);
+
   /*Set Si4463 permanently in RX state */
   SI4463_SetRxState(&si4463);
 
@@ -134,23 +133,25 @@ int main(void)
   /* USER CODE END WHILE */
 
   /* USER CODE BEGIN 3 */
+
 	  HAL_GPIO_TogglePin(LED_ONBOARD_GPIO_Port, LED_ONBOARD_Pin);
 	  HAL_Delay(100); //delay 100ms
-	  si4463_interrupts_t interrupts;
+	  //si4463_interrupts_t interrupts;
 	  //SI4463_GetInterrupts(&si4463, &interrupts);
 	  //SI4463_ClearAllInterrupts(&si4463);
 	  //SI4463_GetChipStatus(&si4463, buffer);
 	  //SI4463_ClearChipStatus(&si4463);
-	  SI4463_GetCurrentState(&si4463, buffer);
+	  //SI4463_GetCurrentState(&si4463, buffer);
 	  //SI4463_GetPartInfo(&si4463, buffer);
 	  HAL_GPIO_TogglePin(LED_ONBOARD_GPIO_Port, LED_ONBOARD_Pin);
 	  HAL_Delay(100); //delay 100ms
 
-	  SI4463_SetTxState(&si4463);
 	  uint8_t testMessage[7] = {0xA1, 0xA2, 0xA3, 0xA4, 0xA5, 0xA6, 0xA7};
 	  SI4463_Transmit(&si4463, testMessage, 7);
+	  SI4463_SetTxState(&si4463);
+	  HAL_Delay(100); //delay 100ms
 	  SI4463_SetRxState(&si4463);
-	  SI4463_ClearAllInterrupts(&si4463);
+	  SI4463_Receive(&si4463, buffer, 64);
   }
   /* USER CODE END 3 */
 
@@ -310,10 +311,155 @@ static void MX_GPIO_Init(void)
 
 /* USER CODE BEGIN 4 */
 
-void TEST_SPI1_Transmit(void)
+void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 {
-	uint8_t rxData[SI4463_CMD_BUF_LEN] = {0};
-	SI4463_GetPartInfo(&si4463, rxData);
+  /* Prevent unused argument(s) compilation warning */
+  UNUSED(GPIO_Pin);
+
+  /*Toggle led for indication*/
+  HAL_GPIO_TogglePin(LED_ONBOARD_GPIO_Port, LED_ONBOARD_Pin);
+
+  /* Get interrupts and work with it */
+  SI4463_GetInterrupts(&si4463);
+
+  /* Handling PH interrupts */
+  if (si4463.interrupts.filterMatch)
+  {
+	  /* Handling this interrupt here */
+	  /* Following instruction only for add breakpoints. May be deleted */
+	  si4463.interrupts.filterMatch = false;
+  }
+  if (si4463.interrupts.filterMiss)
+  {
+	  /* Handling this interrupt here */
+	  /* Following instruction only for add breakpoints. May be deleted */
+	  si4463.interrupts.filterMiss = false;
+  }
+  if (si4463.interrupts.packetSent)
+  {
+	  /* Handling this interrupt here */
+	  /* Following instruction only for add breakpoints. May be deleted */
+	  si4463.interrupts.packetSent = false;
+  }
+  if (si4463.interrupts.packetRx)
+  {
+	  /* Handling this interrupt here */
+	  /* Following instruction only for add breakpoints. May be deleted */
+	  si4463.interrupts.packetRx = false;
+  }
+  if (si4463.interrupts.crcError)
+  {
+	  /* Handling this interrupt here */
+	  /* Following instruction only for add breakpoints. May be deleted */
+	  si4463.interrupts.crcError = false;
+  }
+  if (si4463.interrupts.txFifoAlmostEmpty)
+  {
+	  /* Handling this interrupt here */
+	  /* Following instruction only for add breakpoints. May be deleted */
+	  si4463.interrupts.txFifoAlmostEmpty = false;
+  }
+  if (si4463.interrupts.rxFifoAlmostFull)
+  {
+	  /* Handling this interrupt here */
+	  /* Following instruction only for add breakpoints. May be deleted */
+	  si4463.interrupts.rxFifoAlmostFull = false;
+  }
+
+  /* Handling Modem interrupts */
+  if (si4463.interrupts.postambleDetect)
+  {
+	  /* Handling this interrupt here */
+	  /* Following instruction only for add breakpoints. May be deleted */
+	  si4463.interrupts.postambleDetect = false;
+  }
+  if (si4463.interrupts.invalidSync)
+  {
+	  /* Handling this interrupt here */
+	  /* Following instruction only for add breakpoints. May be deleted */
+	  si4463.interrupts.invalidSync = false;
+  }
+  if (si4463.interrupts.rssiJump)
+  {
+	  /* Handling this interrupt here */
+	  /* Following instruction only for add breakpoints. May be deleted */
+	  si4463.interrupts.rssiJump = false;
+  }
+  if (si4463.interrupts.rssi)
+  {
+	  /* Handling this interrupt here */
+	  /* Following instruction only for add breakpoints. May be deleted */
+	  si4463.interrupts.rssi = false;
+  }
+  if (si4463.interrupts.invalidPreamble)
+  {
+	  /* Handling this interrupt here */
+	  /* Following instruction only for add breakpoints. May be deleted */
+	  si4463.interrupts.invalidPreamble = false;
+  }
+  if (si4463.interrupts.preambleDetect)
+  {
+	  /* Handling this interrupt here */
+	  /* Following instruction only for add breakpoints. May be deleted */
+	  si4463.interrupts.preambleDetect = false;
+  }
+  if (si4463.interrupts.syncDetect)
+  {
+	  /* Handling this interrupt here */
+	  /* Following instruction only for add breakpoints. May be deleted */
+	  si4463.interrupts.syncDetect = false;
+  }
+
+  /* Handling Chip interrupts */
+  if (si4463.interrupts.cal)
+  {
+	  /* Handling this interrupt here */
+	  /* Following instruction only for add breakpoints. May be deleted */
+	  si4463.interrupts.cal = false;
+  }
+  if (si4463.interrupts.fifoUnderflowOverflowError)
+  {
+	  /* Handling this interrupt here */
+	  /* Following instruction only for add breakpoints. May be deleted */
+	  si4463.interrupts.fifoUnderflowOverflowError = false;
+  }
+  if (si4463.interrupts.stateChange)
+  {
+	  /* Handling this interrupt here */
+	  /* Following instruction only for add breakpoints. May be deleted */
+	  si4463.interrupts.stateChange = false;
+  }
+  if (si4463.interrupts.cmdError)
+  {
+	  /* Handling this interrupt here */
+	  /* Following instruction only for add breakpoints. May be deleted */
+	  si4463.interrupts.stateChange = false;
+  }
+  if (si4463.interrupts.chipReady)
+  {
+	  /* Handling this interrupt here */
+	  /* Following instruction only for add breakpoints. May be deleted */
+	  si4463.interrupts.chipReady = false;
+  }
+  if (si4463.interrupts.lowBatt)
+  {
+	  /* Handling this interrupt here */
+	  /* Following instruction only for add breakpoints. May be deleted */
+	  si4463.interrupts.lowBatt = false;
+  }
+  if (si4463.interrupts.wut)
+  {
+	  /* Handling this interrupt here */
+	  /* Following instruction only for add breakpoints. May be deleted */
+	  si4463.interrupts.wut = false;
+  }
+
+  /* GetChipStatus used for clearing Chip interrupts such CMD_ERROR
+   * which cannot clear by SI4463_ClearAllInterrupts */
+  SI4463_GetChipStatus(&si4463, buffer);
+
+  /* Clear All interrupts before exit */
+  SI4463_ClearAllInterrupts(&si4463);
 }
 
 void SI4463_WriteRead(uint8_t * pTxData, uint8_t * pRxData, uint16_t sizeTxData)

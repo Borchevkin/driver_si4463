@@ -38,6 +38,9 @@ void SI4463_Init(si4463_t * si4463)
 	//Starting with reset. Just to be on the safe side
 	SI4463_Reset(si4463);
 	si4463->DelayMs(100);
+	//TODO for strange purposes in official examples doing PowerUp before RadioConfigDataArray
+	//but config have power up as first command in chain
+	//SI4463_PowerUp(si4463);
 
 	//Send all commands while pointer not equal 0x00 (0x00 presence in the end of the configuration array)
 	while(*currentPt != 0x00)
@@ -53,7 +56,8 @@ void SI4463_Init(si4463_t * si4463)
 		//TODO fix this and get CTS signal (or by CTS pin or Read CMD buffer)
 		si4463->DelayMs(100);
 	}
-	//SI4463_ClearAllInterrupts(si4463);
+	//TODO for strange purposes in official examples doing PowerUp after RadioConfigDataArray
+	//SI4463_PowerUp(si4463);
 }
 
 
@@ -80,22 +84,51 @@ void SI4463_PowerUp(si4463_t * si4463)
 	SI4463_ReadCommandBuffer(si4463, answer, 1);
 }
 
-void SI4463_GetInterrupts(si4463_t * si4463, si4463_interrupts_t * interrupts)
+void SI4463_GetInterrupts(si4463_t * si4463)
 {
 	uint8_t answer[SI4463_CMD_BUF_LEN] = {0};
 	uint8_t cmdChain[4] = {SI4463_CMD_GET_INT_STATUS, 0xFF, 0xFF, 0xFF};
+	uint8_t phPend, modemPend, chipPend;
 
 	SI4463_SendCommand(si4463, cmdChain, 4);
 	SI4463_ReadCommandBuffer(si4463, answer, 9);
 
-	interrupts->INT_PEND = answer[1];
-	interrupts->INT_STATUS = answer[2];
-	interrupts->PH_PEND = answer[3];
-	interrupts->PH_STATUS = answer[4];
-	interrupts->MODEM_PEND = answer[5];
-	interrupts->MODEM_STATUS = answer[6];
-	interrupts->CHIP_PEND = answer[7];
-	interrupts->CHIP_STATUS = answer[8];
+	/* Get pend bytes */
+	phPend = answer[4];
+	modemPend = answer[6];
+	chipPend = answer[8];
+
+	/* Get interrupts for structure pointer */
+
+	/* PH pending interrupts */
+	si4463->interrupts.filterMatch = ((phPend & 0x80) >> 7) & 0x01;
+	si4463->interrupts.filterMiss = ((phPend & 0x40) >> 6) & 0x01;
+	si4463->interrupts.packetSent = ((phPend & 0x20) >> 5) & 0x01;
+	si4463->interrupts.packetRx = ((phPend & 0x10) >> 4) & 0x01;
+	si4463->interrupts.crcError = ((phPend & 0x08) >> 3) & 0x01;
+	// Null bit
+	si4463->interrupts.txFifoAlmostEmpty = ((phPend & 0x02) >> 1) & 0x01;
+	si4463->interrupts.rxFifoAlmostFull = phPend & 0x01;
+
+	/* Modem interrupts */
+	// Null bit
+	si4463->interrupts.postambleDetect = ((modemPend & 0x40) >> 6) & 0x01;
+	si4463->interrupts.invalidSync = ((modemPend & 0x20) >> 5) & 0x01;
+	si4463->interrupts.rssiJump = ((modemPend & 0x10) >> 4) & 0x01;
+	si4463->interrupts.rssi = ((modemPend & 0x08) >> 3) & 0x01;
+	si4463->interrupts.invalidPreamble = ((modemPend & 0x04) >> 2) & 0x01;
+	si4463->interrupts.preambleDetect = ((modemPend & 0x02) >> 1) & 0x01;
+	si4463->interrupts.syncDetect = modemPend & 0x01;
+
+	/* Chip interrupts */
+	//Null bit
+	si4463->interrupts.cal = ((chipPend & 0x40) >> 6) & 0x01;
+	si4463->interrupts.fifoUnderflowOverflowError = ((chipPend & 0x20) >> 5) & 0x01;
+	si4463->interrupts.stateChange = ((chipPend & 0x10) >> 4) & 0x01;
+	si4463->interrupts.cmdError = ((chipPend & 0x08) >> 3) & 0x01;
+	si4463->interrupts.chipReady = ((chipPend & 0x04) >> 2) & 0x01;
+	si4463->interrupts.lowBatt = ((chipPend & 0x02) >> 1) & 0x01;
+	si4463->interrupts.wut = chipPend & 0x01;
 }
 
 void SI4463_ClearAllInterrupts(si4463_t * si4463)
@@ -183,5 +216,15 @@ void SI4463_Transmit(si4463_t * si4463, uint8_t * msg, uint8_t msgLen)
 
 void SI4463_Receive(si4463_t * si4463, uint8_t * msg, uint8_t msgLen)
 {
+	uint8_t cmdBuf[SI4463_MAX_RX_FIFO_LEN + 1] = {0};
+	//TODO check what len < FIFO size
+	uint8_t command[msgLen+1];
+	memset(command, 0, msgLen+1);
+	command[0] = SI4463_CMD_READ_RX_FIFO;
 
+	si4463->Select();
+	si4463->WriteRead(command, cmdBuf, sizeof(command));
+	si4463->Deselect();
+
+	memcpy(msg, &cmdBuf[1], msgLen);
 }
