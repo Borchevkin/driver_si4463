@@ -118,9 +118,9 @@ int main(void)
   si4463.ClearShurdown = SI4463_ClearShutdown;
   si4463.DelayMs = HAL_Delay;
   /* Init Si4463 with structure */
+  //__disable_irq();
   SI4463_Init(&si4463);
-  //GetChip status clear pending interrupt invoked by wrond CMD
-  //TODO fix this
+  //__enable_irq();
   SI4463_GetChipStatus(&si4463, buffer);
   /*Set Si4463 permanently in RX state */
   SI4463_SetRxState(&si4463);
@@ -137,12 +137,20 @@ int main(void)
 	  HAL_GPIO_TogglePin(LED_ONBOARD_GPIO_Port, LED_ONBOARD_Pin);
 	  HAL_Delay(100); //delay 100ms
 	  si4463_interrupts_t interrupts;
-	  SI4463_GetInterrupts(&si4463, &interrupts);
-	  SI4463_ClearAllInterrupts(&si4463);
+	  //SI4463_GetInterrupts(&si4463, &interrupts);
+	  //SI4463_ClearAllInterrupts(&si4463);
 	  //SI4463_GetChipStatus(&si4463, buffer);
 	  //SI4463_ClearChipStatus(&si4463);
 	  SI4463_GetCurrentState(&si4463, buffer);
-	  SI4463_GetPartInfo(&si4463, buffer);
+	  //SI4463_GetPartInfo(&si4463, buffer);
+	  HAL_GPIO_TogglePin(LED_ONBOARD_GPIO_Port, LED_ONBOARD_Pin);
+	  HAL_Delay(100); //delay 100ms
+
+	  SI4463_SetTxState(&si4463);
+	  uint8_t testMessage[7] = {0xA1, 0xA2, 0xA3, 0xA4, 0xA5, 0xA6, 0xA7};
+	  SI4463_Transmit(&si4463, testMessage, 7);
+	  SI4463_SetRxState(&si4463);
+	  SI4463_ClearAllInterrupts(&si4463);
   }
   /* USER CODE END 3 */
 

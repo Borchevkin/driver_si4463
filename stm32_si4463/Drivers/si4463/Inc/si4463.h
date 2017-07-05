@@ -17,6 +17,9 @@
 
 /*Values*/
 #define SI4463_CMD_BUF_LEN				(17)
+#define SI4463_MAX_CMD_LEN				(16)
+#define SI4463_MAX_TX_FIFO_LEN			(64)
+#define SI4463_MAX_RX_FIFO_LEN			(64)
 
 /* Commands */
 #define SI4463_CMD_POWER_UP				(0x02)
@@ -105,8 +108,8 @@ void SI4463_ClearAllInterrupts(si4463_t * si4463);
 void SI4463_GetCurrentState(si4463_t * si4463, uint8_t * state);
 void SI4463_SetRxState(si4463_t * si4463);
 void SI4463_SetTxState(si4463_t * si4463);
-void SI4463_Transmit(uint8_t * msg, uint8_t len);
-void SI4463_Receive(uint8_t * msg, uint8_t len);
+void SI4463_Transmit(si4463_t * si4463, uint8_t * packet, uint8_t len);
+void SI4463_Receive(si4463_t * si4463, uint8_t * packet, uint8_t len);
 
 /* End of prototypes section */
 
