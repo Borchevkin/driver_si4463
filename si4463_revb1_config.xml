@@ -7,10 +7,10 @@
           <Value>0</Value>
         </DataItem>
         <DataItem Type="System.Windows.Forms.NumericUpDown" Name="nudCenterFrequency">
-          <Value>433.00000</Value>
+          <Value>435.00000</Value>
         </DataItem>
         <DataItem Type="System.Windows.Forms.NumericUpDown" Name="nudChannelSpacing">
-          <Value>250</Value>
+          <Value>500.00</Value>
         </DataItem>
       </grbFequencyControl>
       <grbCrystalControl Type="System.Windows.Forms.GroupBox">
@@ -24,16 +24,19 @@
           <Value>20</Value>
         </DataItem>
         <DataItem Type="System.Windows.Forms.NumericUpDown" Name="nudCrystalFrequency">
-          <Value>26.000</Value>
+          <Value>26</Value>
         </DataItem>
         <DataItem Type="System.Windows.Forms.NumericUpDown" Name="nudCrystalCapBank">
           <Value>82</Value>
         </DataItem>
       </grbCrystalControl>
       <DataItem Type="System.Windows.Forms.CheckBox" Name="chbDividedSystemClock">
-        <Checked>False</Checked>
+        <Checked>True</Checked>
       </DataItem>
       <grbClockOutput Type="System.Windows.Forms.GroupBox">
+        <DataItem Type="System.Windows.Forms.ComboBox" Name="cbbClockOutput">
+          <SelectedIndex>0</SelectedIndex>
+        </DataItem>
         <DataItem Type="System.Windows.Forms.ComboBox" Name="cbb32kHzClock">
           <SelectedIndex>0</SelectedIndex>
         </DataItem>
@@ -41,9 +44,6 @@
       <grbPowerAmplifierControl Type="System.Windows.Forms.GroupBox">
         <DataItem Type="System.Windows.Forms.CheckBox" Name="chbEnablePaExternalRamp">
           <Checked>False</Checked>
-        </DataItem>
-        <DataItem Type="System.Windows.Forms.NumericUpDown" Name="nudPaRampTC">
-          <Value>29</Value>
         </DataItem>
         <DataItem Type="System.Windows.Forms.ComboBox" Name="cbbPaMode">
           <SelectedIndex>0</SelectedIndex>
@@ -56,19 +56,13 @@
     <tbpRfParameters Type="System.Windows.Forms.TabPage">
       <grbRfParameters Type="System.Windows.Forms.GroupBox">
         <DataItem Type="System.Windows.Forms.ComboBox" Name="cbbModulationType">
-          <SelectedIndex>1</SelectedIndex>
+          <SelectedIndex>0</SelectedIndex>
         </DataItem>
         <DataItem Type="System.Windows.Forms.NumericUpDown" Name="nudDataRate">
-          <Value>10</Value>
-        </DataItem>
-        <DataItem Type="System.Windows.Forms.NumericUpDown" Name="nudDeviation">
-          <Value>20</Value>
-        </DataItem>
-        <DataItem Type="System.Windows.Forms.CheckBox" Name="chbManualRxBandwidth">
-          <Checked>False</Checked>
+          <Value>1</Value>
         </DataItem>
         <DataItem Type="NewWDS.Applications.App_Common.CustomContols.NumericUpDownExtended" Name="nudBandwidth">
-          <Value>150</Value>
+          <Value>200</Value>
         </DataItem>
         <DataItem Type="System.Windows.Forms.ComboBox" Name="cbbIfMode">
           <SelectedIndex>0</SelectedIndex>
@@ -107,15 +101,12 @@
         <DataItem Type="System.Windows.Forms.CheckBox" Name="chbEnableIqCalibration">
           <Checked>False</Checked>
         </DataItem>
-        <DataItem Type="System.Windows.Forms.CheckBox" Name="chbEnablePllAFC">
-          <Checked>False</Checked>
-        </DataItem>
       </grbRfParameters>
     </tbpRfParameters>
     <tbpPacketHandler Type="System.Windows.Forms.TabPage">
       <pccPacketHandlerConfigurator Type="NewWDS.PacketConfigControl">
         <DataItem Type="System.Windows.Forms.ComboBox" Name="cbbPacketStructure">
-          <SelectedIndex>0</SelectedIndex>
+          <SelectedIndex>1</SelectedIndex>
         </DataItem>
         <tabGeneralConfig Type="System.Windows.Forms.TabControl">
           <tbpGeneralPacketConfig Type="System.Windows.Forms.TabPage">
@@ -144,12 +135,9 @@
             </DataItem>
           </tbpVariableLengthConfig>
           <tbpGeneralCrcConfig Type="System.Windows.Forms.TabPage">
-            <DataItem Type="System.Windows.Forms.CheckBox" Name="chbResetCRCAtBeginingOfThePacket">
-              <Checked>True</Checked>
-            </DataItem>
             <grbCrcPolynomial Type="System.Windows.Forms.GroupBox">
               <DataItem Type="System.Windows.Forms.ComboBox" Name="cbbCrcPolynomial">
-                <SelectedIndex>4</SelectedIndex>
+                <SelectedIndex>0</SelectedIndex>
               </DataItem>
             </grbCrcPolynomial>
             <grbCrcSeed Type="System.Windows.Forms.GroupBox">
@@ -251,15 +239,6 @@
               <DataItem Type="System.Windows.Forms.NumericUpDown" Name="nudField5Length">
                 <Value>7</Value>
               </DataItem>
-              <DataItem Type="System.Windows.Forms.CheckBox" Name="chbField5EnableCRC">
-                <Checked>False</Checked>
-              </DataItem>
-              <DataItem Type="System.Windows.Forms.CheckBox" Name="chbField5CheckCRC">
-                <Checked>False</Checked>
-              </DataItem>
-              <DataItem Type="System.Windows.Forms.CheckBox" Name="chbField5TransmitCRC">
-                <Checked>False</Checked>
-              </DataItem>
               <DataItem Type="System.Windows.Forms.CheckBox" Name="chbField5DataWhitening">
                 <Checked>False</Checked>
               </DataItem>
@@ -272,15 +251,6 @@
             <grbField4 Type="System.Windows.Forms.GroupBox">
               <DataItem Type="System.Windows.Forms.NumericUpDown" Name="nudField4Length">
                 <Value>7</Value>
-              </DataItem>
-              <DataItem Type="System.Windows.Forms.CheckBox" Name="chbField4EnableCRC">
-                <Checked>False</Checked>
-              </DataItem>
-              <DataItem Type="System.Windows.Forms.CheckBox" Name="chbField4CheckCRC">
-                <Checked>False</Checked>
-              </DataItem>
-              <DataItem Type="System.Windows.Forms.CheckBox" Name="chbField4TransmitCRC">
-                <Checked>False</Checked>
               </DataItem>
               <DataItem Type="System.Windows.Forms.CheckBox" Name="chbField4DataWhitening">
                 <Checked>False</Checked>
@@ -295,15 +265,6 @@
               <DataItem Type="System.Windows.Forms.NumericUpDown" Name="nudField3Length">
                 <Value>7</Value>
               </DataItem>
-              <DataItem Type="System.Windows.Forms.CheckBox" Name="chbField3EnableCRC">
-                <Checked>False</Checked>
-              </DataItem>
-              <DataItem Type="System.Windows.Forms.CheckBox" Name="chbField3CheckCRC">
-                <Checked>False</Checked>
-              </DataItem>
-              <DataItem Type="System.Windows.Forms.CheckBox" Name="chbField3TransmitCRC">
-                <Checked>False</Checked>
-              </DataItem>
               <DataItem Type="System.Windows.Forms.CheckBox" Name="chbField3DataWhitening">
                 <Checked>False</Checked>
               </DataItem>
@@ -317,15 +278,6 @@
               <DataItem Type="System.Windows.Forms.NumericUpDown" Name="nudField2Length">
                 <Value>7</Value>
               </DataItem>
-              <DataItem Type="System.Windows.Forms.CheckBox" Name="chbField2EnableCRC">
-                <Checked>False</Checked>
-              </DataItem>
-              <DataItem Type="System.Windows.Forms.CheckBox" Name="chbField2CheckCRC">
-                <Checked>False</Checked>
-              </DataItem>
-              <DataItem Type="System.Windows.Forms.CheckBox" Name="chbField2TransmitCRC">
-                <Checked>False</Checked>
-              </DataItem>
               <DataItem Type="System.Windows.Forms.CheckBox" Name="chbField2DataWhitening">
                 <Checked>False</Checked>
               </DataItem>
@@ -338,15 +290,6 @@
             <grbField1 Type="System.Windows.Forms.GroupBox">
               <DataItem Type="System.Windows.Forms.NumericUpDown" Name="nudField1Length">
                 <Value>7</Value>
-              </DataItem>
-              <DataItem Type="System.Windows.Forms.CheckBox" Name="chbField1EnableCRC">
-                <Checked>False</Checked>
-              </DataItem>
-              <DataItem Type="System.Windows.Forms.CheckBox" Name="chbField1CheckCRC">
-                <Checked>False</Checked>
-              </DataItem>
-              <DataItem Type="System.Windows.Forms.CheckBox" Name="chbField1TransmitCRC">
-                <Checked>False</Checked>
               </DataItem>
               <DataItem Type="System.Windows.Forms.CheckBox" Name="chbField1DataWhitening">
                 <Checked>False</Checked>
@@ -366,7 +309,7 @@
         </DataItem>
         <DataItem Type="NewWDS.Applications.App_Common.ByteStatusControl.ByteStatus" Name="bstChipInterruptStatus">
           <Enabled>True</Enabled>
-          <Value>128</Value>
+          <Value>40</Value>
         </DataItem>
       </grbChipInterrupt>
       <grbModemInterrupt Type="System.Windows.Forms.GroupBox">
@@ -375,7 +318,7 @@
         </DataItem>
         <DataItem Type="NewWDS.Applications.App_Common.ByteStatusControl.ByteStatus" Name="bstModemInterruptStatus">
           <Enabled>True</Enabled>
-          <Value>0</Value>
+          <Value>2</Value>
         </DataItem>
       </grbModemInterrupt>
       <grbPacketHandlerInterrupt Type="System.Windows.Forms.GroupBox">
@@ -384,7 +327,7 @@
         </DataItem>
         <DataItem Type="NewWDS.Applications.App_Common.ByteStatusControl.ByteStatus" Name="bstPacketHandlerInterruptStatus">
           <Enabled>True</Enabled>
-          <Value>16</Value>
+          <Value>176</Value>
         </DataItem>
       </grbPacketHandlerInterrupt>
       <grbColorDescrition Type="System.Windows.Forms.GroupBox" />
@@ -430,10 +373,10 @@
           <SelectedIndex>DONOTHING</SelectedIndex>
         </DataItem>
         <DataItem Type="System.Windows.Forms.CheckBox" Name="chbNirqPullup">
-          <Checked>True</Checked>
+          <Checked>False</Checked>
         </DataItem>
         <DataItem Type="System.Windows.Forms.ComboBox" Name="cbbNirq">
-          <SelectedIndex>Active low interrupt signal</SelectedIndex>
+          <SelectedIndex>DONOTHING</SelectedIndex>
         </DataItem>
         <DataItem Type="System.Windows.Forms.CheckBox" Name="chbSdoPullup">
           <Checked>False</Checked>

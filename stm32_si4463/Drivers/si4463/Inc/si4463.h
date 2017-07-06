@@ -100,13 +100,21 @@ typedef struct
 
 typedef struct
 {
+	uint8_t cmdError;
+	uint8_t cmdErrCmdId;
+} si4463_chip_status_t;
+
+typedef struct
+{
 	void (*WriteRead)(uint8_t * pTxData, uint8_t * pRxData, uint16_t txSize);
 	void (*SetShutdown)(void);
 	void (*ClearShurdown)(void);
 	void (*Select)(void);
 	void (*Deselect)(void);
 	void (*DelayMs)(uint32_t delayMs);
+	bool (*IsCTS)(void);
 	si4463_interrupts_t interrupts;
+	si4463_chip_status_t chipStatus;
 } si4463_t;
 
 /* End types section */
@@ -119,15 +127,16 @@ void SI4463_Init(si4463_t * si4463);
 void SI4463_PowerUp(si4463_t * si4463);
 void SI4463_Reset(si4463_t * si4463);
 void SI4463_GetPartInfo(si4463_t * si4463, uint8_t * pRxData);
-void SI4463_GetChipStatus(si4463_t * si4463, uint8_t * pRxData);
+void SI4463_GetChipStatus(si4463_t * si4463);
 void SI4463_ClearChipStatus(si4463_t * si4463);
 void SI4463_GetInterrupts(si4463_t * si4463);
 void SI4463_ClearAllInterrupts(si4463_t * si4463);
 void SI4463_GetCurrentState(si4463_t * si4463, uint8_t * state);
-void SI4463_SetRxState(si4463_t * si4463);
-void SI4463_SetTxState(si4463_t * si4463);
-void SI4463_Transmit(si4463_t * si4463, uint8_t * packet, uint8_t len);
-void SI4463_Receive(si4463_t * si4463, uint8_t * packet, uint8_t len);
+void SI4463_SetCurrentState(si4463_t * si4463, uint8_t * state);
+void SI4463_StartRx(si4463_t * si4463);
+void SI4463_StartTx(si4463_t * si4463);
+void SI4463_WriteTxFifo(si4463_t * si4463, uint8_t * packet, uint8_t len);
+void SI4463_ReadRxFifo(si4463_t * si4463, uint8_t * packet, uint8_t len);
 
 /* End of prototypes section */
 

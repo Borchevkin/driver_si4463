@@ -52,7 +52,6 @@ UART_HandleTypeDef huart1;
 /* USER CODE BEGIN PV */
 /* Private variables ---------------------------------------------------------*/
 si4463_t si4463;
-uint8_t buffer[SI4463_CMD_BUF_LEN] = {0};
 
 /* USER CODE END PV */
 
@@ -65,6 +64,7 @@ static void MX_NVIC_Init(void);
 
 /* USER CODE BEGIN PFP */
 /* Private function prototypes -----------------------------------------------*/
+bool SI4463_IsCTS(void);
 void SI4463_WriteRead(uint8_t * pTxData, uint8_t * pRxData, uint16_t sizeTxData);
 void SI4463_SetShutdown(void);
 void SI4463_ClearShutdown(void);
@@ -111,18 +111,16 @@ int main(void)
   /* USER CODE BEGIN 2 */
 
   /* Assign functions */
+  si4463.IsCTS = SI4463_IsCTS;
   si4463.WriteRead = SI4463_WriteRead;
   si4463.Select = SI4463_Select;
   si4463.Deselect = SI4463_Deselect;
   si4463.SetShutdown = SI4463_SetShutdown;
   si4463.ClearShurdown = SI4463_ClearShutdown;
   si4463.DelayMs = HAL_Delay;
-
   /* Init Si4463 with structure */
   SI4463_Init(&si4463);
-
-  /*Set Si4463 permanently in RX state */
-  SI4463_SetRxState(&si4463);
+  SI4463_StartRx(&si4463);
 
   /* USER CODE END 2 */
 
@@ -133,25 +131,18 @@ int main(void)
   /* USER CODE END WHILE */
 
   /* USER CODE BEGIN 3 */
+	  //uint8_t testMessage[7] = {0xA1, 0xA2, 0xA3, 0xA4, 0xA5, 0xA6, 0xA7};
+	  //SI4463_WriteTxFifo(&si4463, testMessage, 7);
+	  //SI4463_StartTx(&si4463);
 
-	  HAL_GPIO_TogglePin(LED_ONBOARD_GPIO_Port, LED_ONBOARD_Pin);
-	  HAL_Delay(100); //delay 100ms
-	  //si4463_interrupts_t interrupts;
-	  //SI4463_GetInterrupts(&si4463, &interrupts);
-	  //SI4463_ClearAllInterrupts(&si4463);
-	  //SI4463_GetChipStatus(&si4463, buffer);
-	  //SI4463_ClearChipStatus(&si4463);
-	  //SI4463_GetCurrentState(&si4463, buffer);
-	  //SI4463_GetPartInfo(&si4463, buffer);
-	  HAL_GPIO_TogglePin(LED_ONBOARD_GPIO_Port, LED_ONBOARD_Pin);
-	  HAL_Delay(100); //delay 100ms
+	  HAL_Delay(100);
 
-	  uint8_t testMessage[7] = {0xA1, 0xA2, 0xA3, 0xA4, 0xA5, 0xA6, 0xA7};
-	  SI4463_Transmit(&si4463, testMessage, 7);
-	  SI4463_SetTxState(&si4463);
-	  HAL_Delay(100); //delay 100ms
-	  SI4463_SetRxState(&si4463);
-	  SI4463_Receive(&si4463, buffer, 64);
+	  uint8_t incoming[64] = {0};
+	  memset(incoming, 0x00, 64);
+	  SI4463_ReadRxFifo(&si4463, incoming, 64);
+
+	  uint8_t currentState = 0;
+	  SI4463_GetCurrentState(&si4463, &currentState);
   }
   /* USER CODE END 3 */
 
@@ -289,6 +280,12 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(LED_ONBOARD_GPIO_Port, &GPIO_InitStruct);
 
+  /*Configure GPIO pin : CTS_Pin */
+  GPIO_InitStruct.Pin = CTS_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  HAL_GPIO_Init(CTS_GPIO_Port, &GPIO_InitStruct);
+
   /*Configure GPIO pin : SHUTDOWN_Pin */
   GPIO_InitStruct.Pin = SHUTDOWN_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
@@ -297,7 +294,7 @@ static void MX_GPIO_Init(void)
 
   /*Configure GPIO pin : nIRQ_Pin */
   GPIO_InitStruct.Pin = nIRQ_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_IT_FALLING;
+  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(nIRQ_GPIO_Port, &GPIO_InitStruct);
 
@@ -313,11 +310,10 @@ static void MX_GPIO_Init(void)
 
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 {
+  uint8_t buffer[SI4463_CMD_BUF_LEN];
+  memset(buffer, 0x00, SI4463_CMD_BUF_LEN);
   /* Prevent unused argument(s) compilation warning */
   UNUSED(GPIO_Pin);
-
-  /*Toggle led for indication*/
-  HAL_GPIO_TogglePin(LED_ONBOARD_GPIO_Port, LED_ONBOARD_Pin);
 
   /* Get interrupts and work with it */
   SI4463_GetInterrupts(&si4463);
@@ -340,6 +336,8 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 	  /* Handling this interrupt here */
 	  /* Following instruction only for add breakpoints. May be deleted */
 	  si4463.interrupts.packetSent = false;
+	  /*Toggle led for indication*/
+	  HAL_GPIO_TogglePin(LED_ONBOARD_GPIO_Port, LED_ONBOARD_Pin);
   }
   if (si4463.interrupts.packetRx)
   {
@@ -364,6 +362,8 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 	  /* Handling this interrupt here */
 	  /* Following instruction only for add breakpoints. May be deleted */
 	  si4463.interrupts.rxFifoAlmostFull = false;
+	  /*Toggle led for indication*/
+	  HAL_GPIO_TogglePin(LED_ONBOARD_GPIO_Port, LED_ONBOARD_Pin);
   }
 
   /* Handling Modem interrupts */
@@ -432,6 +432,7 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
   if (si4463.interrupts.cmdError)
   {
 	  /* Handling this interrupt here */
+	  SI4463_GetChipStatus(&si4463);
 	  /* Following instruction only for add breakpoints. May be deleted */
 	  si4463.interrupts.stateChange = false;
   }
@@ -456,10 +457,22 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 
   /* GetChipStatus used for clearing Chip interrupts such CMD_ERROR
    * which cannot clear by SI4463_ClearAllInterrupts */
-  SI4463_GetChipStatus(&si4463, buffer);
+  SI4463_GetChipStatus(&si4463);
 
   /* Clear All interrupts before exit */
   SI4463_ClearAllInterrupts(&si4463);
+}
+
+bool SI4463_IsCTS(void)
+{
+	if(HAL_GPIO_ReadPin(CTS_GPIO_Port, CTS_Pin) == GPIO_PIN_SET)
+	{
+		return true;
+	}
+	else
+	{
+		return false;
+	}
 }
 
 void SI4463_WriteRead(uint8_t * pTxData, uint8_t * pRxData, uint16_t sizeTxData)

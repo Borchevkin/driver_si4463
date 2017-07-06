@@ -48,6 +48,8 @@
 
 #define LED_ONBOARD_Pin GPIO_PIN_13
 #define LED_ONBOARD_GPIO_Port GPIOC
+#define CTS_Pin GPIO_PIN_2
+#define CTS_GPIO_Port GPIOA
 #define SHUTDOWN_Pin GPIO_PIN_3
 #define SHUTDOWN_GPIO_Port GPIOA
 #define nIRQ_Pin GPIO_PIN_0
