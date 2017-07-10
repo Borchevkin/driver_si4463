@@ -240,7 +240,7 @@ void SI4463_StartRx(si4463_t * si4463)
 							0x00,
 							(RADIO_CONFIGURATION_DATA_RADIO_PACKET_LENGTH & 0xFF00) >> 8,
 							RADIO_CONFIGURATION_DATA_RADIO_PACKET_LENGTH & 0xFF,
-							0x00,
+							0x80,
 							0x00,
 							0x00};
 

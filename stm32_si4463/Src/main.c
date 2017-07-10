@@ -54,9 +54,8 @@ UART_HandleTypeDef huart1;
 /* Private variables ---------------------------------------------------------*/
 si4463_t si4463;
 uint8_t incomingBuffer[RADIO_CONFIGURATION_DATA_RADIO_PACKET_LENGTH];
-uint8_t typingMessage[RADIO_CONFIGURATION_DATA_RADIO_PACKET_LENGTH];
-uint8_t byteCounter = 0;
-uint8_t incomingChar = 0;
+uint8_t outgoingBuffer[RADIO_CONFIGURATION_DATA_RADIO_PACKET_LENGTH];
+
 
 /* USER CODE END PV */
 
@@ -165,9 +164,17 @@ int main(void)
   /* USER CODE END WHILE */
 
   /* USER CODE BEGIN 3 */
-	  /* Following is dummy code. May be deleted */
-	  SI4463_GetInterrupts(&si4463);
-	  HAL_Delay(500);
+	  /* Send test packet */
+	  outgoingBuffer[0] = rand() & 0xFF;
+	  outgoingBuffer[1] = rand() & 0xFF;
+	  outgoingBuffer[2] = rand() & 0xFF;
+	  outgoingBuffer[3] = rand() & 0xFF;
+	  outgoingBuffer[4] = rand() & 0xFF;
+	  outgoingBuffer[5] = rand() & 0xFF;
+	  outgoingBuffer[6] = rand() & 0xFF;
+	  SI4463_Transmit(&si4463, outgoingBuffer, RADIO_CONFIGURATION_DATA_RADIO_PACKET_LENGTH);
+	  HAL_Delay(1100);
+	  /* End of send of test packet */
   }
   /* USER CODE END 3 */
 
@@ -362,6 +369,14 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 	  /* Handling this interrupt here */
 	  /* Clear TX FIFO */
 	  SI4463_ClearTxFifo(&si4463);
+#ifdef DEMOFEST
+	  HAL_UART_Transmit(&huart1, "OUT >", 5, 10);
+	  HAL_UART_Transmit(&huart1, incomingBuffer, RADIO_CONFIGURATION_DATA_RADIO_PACKET_LENGTH, 10);
+	  HAL_UART_Transmit(&huart1, "\n", 1, 10);
+#endif /* DEMOFEST */
+	  /* Re-arm StartRX */
+	  SI4463_StartRx(&si4463);
+
 	  /*Toggle led for indication*/
 	  HAL_GPIO_TogglePin(LED_ONBOARD_GPIO_Port, LED_ONBOARD_Pin);
 	  /* Following instruction only for add breakpoints. May be deleted */
@@ -379,14 +394,15 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 	  HAL_UART_Transmit(&huart1, incomingBuffer, RADIO_CONFIGURATION_DATA_RADIO_PACKET_LENGTH, 10);
 	  HAL_UART_Transmit(&huart1, "\n", 1, 10);
 #endif /* DEMOFEST */
-	  /*Toggle led for indication*/
-	  HAL_GPIO_TogglePin(LED_ONBOARD_GPIO_Port, LED_ONBOARD_Pin);
 
 	  /* Start RX again.
 	   * It need because after successful receive a packet the chip change
 	   * state to READY.
 	   * There is re-armed mode for StartRx but it not correctly working */
 	  SI4463_StartRx(&si4463);
+
+	  /*Toggle led for indication*/
+	  HAL_GPIO_TogglePin(LED_ONBOARD_GPIO_Port, LED_ONBOARD_Pin);
 
 	  /* Following instruction only for add breakpoints. May be deleted */
 	  si4463.interrupts.packetRx = false;
@@ -408,8 +424,7 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
   if (si4463.interrupts.rxFifoAlmostFull)
   {
 	  /* Handling this interrupt here */
-	  /*Toggle led for indication*/
-	  HAL_GPIO_TogglePin(LED_ONBOARD_GPIO_Port, LED_ONBOARD_Pin);
+
 	  /* Following instruction only for add breakpoints. May be deleted */
 	  si4463.interrupts.rxFifoAlmostFull = false;
   }
@@ -522,33 +537,8 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 {
-	uint8_t incomingChar = 0;
   /* Prevent unused argument(s) compilation warning */
   UNUSED(huart);
-
-  /* Clear the buffer to prevent overrun */
-  //__HAL_UART_FLUSH_DRREGISTER(&huart1);
-
-  HAL_UART_Receive_IT(huart, incomingChar, 1);
-
-
-  byteCounter++;
-
-  if (byteCounter < RADIO_CONFIGURATION_DATA_RADIO_PACKET_LENGTH)
-  {
-	  typingMessage[byteCounter] = 0 ;
-  }
-  else
-  {
-#ifdef DEMOFEST
-	  HAL_UART_Transmit(huart, "OUT >", 5, 10);
-	  HAL_UART_Transmit(huart, typingMessage, RADIO_CONFIGURATION_DATA_RADIO_PACKET_LENGTH, 10);
-	  HAL_UART_Transmit(huart, "\n", 1, 10);
-	  SI4463_Transmit(&si4463, typingMessage, RADIO_CONFIGURATION_DATA_RADIO_PACKET_LENGTH);
-
-	  byteCounter = 0;
-#endif /*DEMOFEST*/
-  }
 }
 
 bool SI4463_IsCTS(void)
