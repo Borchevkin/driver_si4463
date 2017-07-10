@@ -74,9 +74,6 @@ void SI4463_Init(si4463_t * si4463)
 
 void SI4463_Reset(si4463_t * si4463)
 {
-	/* Wait CTS signal */
-	while (!si4463->IsCTS());;
-
 	si4463->SetShutdown();
 	si4463->DelayMs(10);
 	si4463->ClearShutdown();
