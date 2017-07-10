@@ -49,6 +49,8 @@ void SI4463_Init(si4463_t * si4463)
 	SI4463_Reset(si4463);
 	SI4463_PowerUp(si4463);
 
+	si4463->DelayMs(100);
+
 	//Send all commands while pointer not equal 0x00 (0x00 presence in the end of the configuration array)
 	while(*currentPt != 0x00)
 	{
@@ -59,6 +61,7 @@ void SI4463_Init(si4463_t * si4463)
 		memcpy(command, currentPt, len);
 		SI4463_SendCommand(si4463, command, len);
 		currentPt += len;
+		si4463->DelayMs(100);
 	}
 	/* Clear all interrupts invoked during configuration */
 	//SI4463_ClearAllInterrupts(si4463);
@@ -67,10 +70,14 @@ void SI4463_Init(si4463_t * si4463)
 
 void SI4463_Reset(si4463_t * si4463)
 {
+	/* Wait CTS signal */
+	while (!si4463->IsCTS());;
+
 	si4463->SetShutdown();
 	si4463->DelayMs(10);
 	si4463->ClearShurdown();
 	si4463->DelayMs(100);
+
 	/* Wait CTS signal */
 	while (!si4463->IsCTS());;
 }
@@ -89,8 +96,9 @@ void SI4463_PowerUp(si4463_t * si4463)
 
 	//SI4463_ClearAllInterrupts(si4463);
 	SI4463_SendCommand(si4463, cmdChain, 7);
-	si4463->DelayMs(100);
-	//TODO check CTS
+
+	/* Wait CTS signal */
+	while (!si4463->IsCTS());;
 }
 
 void SI4463_GetInterrupts(si4463_t * si4463)
@@ -154,7 +162,7 @@ void SI4463_ClearInterrupts(si4463_t * si4463)
 void SI4463_ClearAllInterrupts(si4463_t * si4463)
 {
 	SI4463_ClearInterrupts(si4463);
-	SI4463_ClearChipStatus(si4463);
+	SI4463_GetChipStatus(si4463);
 }
 
 void SI4463_GetPartInfo(si4463_t * si4463, uint8_t * pRxData)
@@ -211,8 +219,6 @@ void SI4463_SetCurrentState(si4463_t * si4463, uint8_t * state)
 	//SI4463_ClearAllInterrupts(si4463);
 	SI4463_SendCommand(si4463, cmdChain, 1);
 	SI4463_ReadCommandBuffer(si4463, answer, 1);
-
-	*state = answer[2];
 }
 
 void SI4463_StartRx(si4463_t * si4463)
