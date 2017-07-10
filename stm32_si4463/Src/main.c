@@ -173,7 +173,9 @@ int main(void)
 	  outgoingBuffer[5] = rand() & 0xFF;
 	  outgoingBuffer[6] = rand() & 0xFF;
 	  SI4463_Transmit(&si4463, outgoingBuffer, RADIO_CONFIGURATION_DATA_RADIO_PACKET_LENGTH);
-	  HAL_Delay(1100);
+
+	  uint32_t newDelay = 500 + ((rand() & 0xF) * 100);
+	  HAL_Delay(newDelay);
 	  /* End of send of test packet */
   }
   /* USER CODE END 3 */
@@ -371,7 +373,7 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 	  SI4463_ClearTxFifo(&si4463);
 #ifdef DEMOFEST
 	  HAL_UART_Transmit(&huart1, "OUT >", 5, 10);
-	  HAL_UART_Transmit(&huart1, incomingBuffer, RADIO_CONFIGURATION_DATA_RADIO_PACKET_LENGTH, 10);
+	  HAL_UART_Transmit(&huart1, outgoingBuffer, RADIO_CONFIGURATION_DATA_RADIO_PACKET_LENGTH, 10);
 	  HAL_UART_Transmit(&huart1, "\n", 1, 10);
 #endif /* DEMOFEST */
 	  /* Re-arm StartRX */
