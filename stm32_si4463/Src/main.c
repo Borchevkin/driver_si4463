@@ -113,7 +113,7 @@ int main(void)
   /* USER CODE BEGIN 2 */
 
   /* Debug message on uart */
-  //HAL_UART_Transmit(&huart1, "START\n", 6, 10);
+  HAL_UART_Transmit(&huart1, "START\n", 6, 10);
 
   /* Assign functions */
   si4463.IsCTS = SI4463_IsCTS;
@@ -131,11 +131,11 @@ int main(void)
   SI4463_Init(&si4463);
 
   /* Start RX packets */
-  //SI4463_ClearRxFifo(&si4463);
-  //SI4463_StartRx(&si4463);
+  SI4463_ClearRxFifo(&si4463);
+  SI4463_StartRx(&si4463);
 
   /* Debug message on uart */
-  //HAL_UART_Transmit(&huart1, "INIT\n", 5, 10);
+  HAL_UART_Transmit(&huart1, "INIT\n", 5, 10);
 
   /* Enable interrupt pin and */
   HAL_NVIC_EnableIRQ(EXTI0_IRQn);
@@ -152,22 +152,22 @@ int main(void)
   /* USER CODE BEGIN 3 */
 	  uint8_t foo = 0x06;
 	  HAL_Delay(500);
-	  uint8_t testMessage[7] = {0, 0, 0, 0xA4, 0xA5, 0xA6, 0xA7};
+	  //uint8_t testMessage[7] = {0, 0, 0, 0xA4, 0xA5, 0xA6, 0xA7};
 	  //testMessage[0] = rand() & 0xFF;
 	  //testMessage[1] = rand() & 0xFF;
 	  //testMessage[2] = rand() & 0xFF;
 	  //SI4463_SetCurrentState(&si4463, &currentState);
-	  SI4463_WriteTxFifo(&si4463, testMessage, 7);
-	  SI4463_GetTxFifoBytesCount(&si4463, &foo);
-	  HAL_Delay(100);
-	  SI4463_StartTx(&si4463);
+	  //SI4463_WriteTxFifo(&si4463, testMessage, 7);
+	  //SI4463_GetTxFifoBytesCount(&si4463, &foo);
+	  //HAL_Delay(100);
+	  //SI4463_StartTx(&si4463);
 	  //HAL_UART_Transmit(&huart1, "SEND\n", 5, 10);
 	  //Doesnt work StartRx after StartTx without polling IsPacketSent
 	  //SI4463_StartRx(&si4463);
 
 	  SI4463_GetInterrupts(&si4463);
 	  SI4463_GetCurrentState(&si4463, &foo);
-	  SI4463_ClearChipStatus(&si4463);
+	  //SI4463_ClearChipStatus(&si4463);
 	  foo = 0;
 	  HAL_Delay(100);
 	  //SI4463_StartRx(&si4463);

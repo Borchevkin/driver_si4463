@@ -60,7 +60,7 @@
 
 /* USER CODE BEGIN Private defines */
 
-#define DEMOFEST
+#define DEMOFEST 		(0x01)
 
 /* USER CODE END Private defines */
 
