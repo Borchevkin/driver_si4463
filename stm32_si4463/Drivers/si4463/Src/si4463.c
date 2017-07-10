@@ -45,11 +45,10 @@ void SI4463_Init(si4463_t * si4463)
 	uint8_t radioConfigurationDataArray[]  = RADIO_CONFIGURATION_DATA_ARRAY;
 	uint8_t * currentPt = &radioConfigurationDataArray[0];
 
-	//Starting with reset. Just to be on the safe side
+	/* Start with RESET and POWER_UP commands.
+	 * By the way, POWER_UP there is into RADIO_CONFIGURATION_DATA_ARRAY*/
 	SI4463_Reset(si4463);
 	SI4463_PowerUp(si4463);
-
-	si4463->DelayMs(100);
 
 	//Send all commands while pointer not equal 0x00 (0x00 presence in the end of the configuration array)
 	while(*currentPt != 0x00)
@@ -61,6 +60,11 @@ void SI4463_Init(si4463_t * si4463)
 		memcpy(command, currentPt, len);
 		SI4463_SendCommand(si4463, command, len);
 		currentPt += len;
+		/* In the SI4463_SendCommand there is a polling of CTS signal.
+		 * But without delay after applying command from configuration array
+		 * invoke chip error "CMD_ERROR_COMMAND_BUSY" that means sending command
+		 * before accepting previous.
+		 */
 		si4463->DelayMs(100);
 	}
 	/* Clear all interrupts invoked during configuration */
@@ -75,11 +79,14 @@ void SI4463_Reset(si4463_t * si4463)
 
 	si4463->SetShutdown();
 	si4463->DelayMs(10);
-	si4463->ClearShurdown();
+	si4463->ClearShutdown();
 	si4463->DelayMs(100);
 
 	/* Wait CTS signal */
 	while (!si4463->IsCTS());;
+
+	/* Delay need for set up the chip in the default state */
+	si4463->DelayMs(1000);
 }
 
 void SI4463_PowerUp(si4463_t * si4463)
@@ -99,6 +106,9 @@ void SI4463_PowerUp(si4463_t * si4463)
 
 	/* Wait CTS signal */
 	while (!si4463->IsCTS());;
+
+	/* Delay need for set up the chip in the POWER_UP state */
+	si4463->DelayMs(1000);
 }
 
 void SI4463_GetInterrupts(si4463_t * si4463)
@@ -245,7 +255,7 @@ void SI4463_StartTx(si4463_t * si4463)
 	memset(answer, 0x00, SI4463_CMD_BUF_LEN);
 	uint8_t cmdChain[5] = {SI4463_CMD_START_TX,
 								RADIO_CONFIGURATION_DATA_CHANNEL_NUMBER,
-								0x00,
+								0x80,
 								((RADIO_CONFIGURATION_DATA_RADIO_PACKET_LENGTH & 0xFF00) >> 8) & 0x1F,
 								RADIO_CONFIGURATION_DATA_RADIO_PACKET_LENGTH & 0xFF};
 
@@ -331,4 +341,10 @@ void SI4463_ClearTxFifo(si4463_t * si4463)
 
 	//SI4463_ClearAllInterrupts(si4463);
 	SI4463_SendCommand(si4463, cmdChain, 2);
+}
+
+void SI4463_Transmit(si4463_t * si4463, uint8_t * packet, uint8_t len)
+{
+	SI4463_WriteTxFifo(si4463, packet, len);
+	SI4463_StartTx(si4463);
 }

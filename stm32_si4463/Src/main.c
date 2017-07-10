@@ -54,6 +54,9 @@ UART_HandleTypeDef huart1;
 /* Private variables ---------------------------------------------------------*/
 si4463_t si4463;
 uint8_t incomingBuffer[RADIO_CONFIGURATION_DATA_RADIO_PACKET_LENGTH];
+uint8_t typingMessage[RADIO_CONFIGURATION_DATA_RADIO_PACKET_LENGTH];
+uint8_t byteCounter = 0;
+uint8_t incomingChar = 0;
 
 /* USER CODE END PV */
 
@@ -112,8 +115,10 @@ int main(void)
 
   /* USER CODE BEGIN 2 */
 
+#ifdef DEMOFEST
   /* Debug message on uart */
   HAL_UART_Transmit(&huart1, "START\n", 6, 10);
+#endif
 
   /* Assign functions */
   si4463.IsCTS = SI4463_IsCTS;
@@ -121,7 +126,7 @@ int main(void)
   si4463.Select = SI4463_Select;
   si4463.Deselect = SI4463_Deselect;
   si4463.SetShutdown = SI4463_SetShutdown;
-  si4463.ClearShurdown = SI4463_ClearShutdown;
+  si4463.ClearShutdown = SI4463_ClearShutdown;
   si4463.DelayMs = HAL_Delay;
 
   /* Disable interrupt pin for init Si4463 */
@@ -130,15 +135,25 @@ int main(void)
   /* Init Si4463 with structure */
   SI4463_Init(&si4463);
 
-  /* Start RX packets */
+  /* Clear RX FIFO before starting RX packets */
   SI4463_ClearRxFifo(&si4463);
+  /* Start RX mode.
+   * SI4463_StartRx() put a chip in non-armed mode:
+   * - successfully receive a packet;
+   * - invoked RX_TIMEOUT;
+   * - invalid receive.
+   * For receiveing next packet you have to invoke SI4463_StartRx() again!*/
   SI4463_StartRx(&si4463);
 
-  /* Debug message on uart */
+#ifdef DEMOFEST
+  /* Debug message on UART */
   HAL_UART_Transmit(&huart1, "INIT\n", 5, 10);
+#endif
 
   /* Enable interrupt pin and */
   HAL_NVIC_EnableIRQ(EXTI0_IRQn);
+  /* Clear interrupts after enabling interrupt pin.
+   * Without it may be situation when interrupt is asserted but pin not cleared.*/
   SI4463_ClearInterrupts(&si4463);
 
   /* USER CODE END 2 */
@@ -150,27 +165,9 @@ int main(void)
   /* USER CODE END WHILE */
 
   /* USER CODE BEGIN 3 */
-	  uint8_t foo = 0x06;
-	  HAL_Delay(500);
-	  //uint8_t testMessage[7] = {0, 0, 0, 0xA4, 0xA5, 0xA6, 0xA7};
-	  //testMessage[0] = rand() & 0xFF;
-	  //testMessage[1] = rand() & 0xFF;
-	  //testMessage[2] = rand() & 0xFF;
-	  //SI4463_SetCurrentState(&si4463, &currentState);
-	  //SI4463_WriteTxFifo(&si4463, testMessage, 7);
-	  //SI4463_GetTxFifoBytesCount(&si4463, &foo);
-	  //HAL_Delay(100);
-	  //SI4463_StartTx(&si4463);
-	  //HAL_UART_Transmit(&huart1, "SEND\n", 5, 10);
-	  //Doesnt work StartRx after StartTx without polling IsPacketSent
-	  //SI4463_StartRx(&si4463);
-
+	  /* Following is dummy code. May be deleted */
 	  SI4463_GetInterrupts(&si4463);
-	  SI4463_GetCurrentState(&si4463, &foo);
-	  //SI4463_ClearChipStatus(&si4463);
-	  foo = 0;
-	  HAL_Delay(100);
-	  //SI4463_StartRx(&si4463);
+	  HAL_Delay(500);
   }
   /* USER CODE END 3 */
 
@@ -385,6 +382,12 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 	  /*Toggle led for indication*/
 	  HAL_GPIO_TogglePin(LED_ONBOARD_GPIO_Port, LED_ONBOARD_Pin);
 
+	  /* Start RX again.
+	   * It need because after successful receive a packet the chip change
+	   * state to READY.
+	   * There is re-armed mode for StartRx but it not correctly working */
+	  SI4463_StartRx(&si4463);
+
 	  /* Following instruction only for add breakpoints. May be deleted */
 	  si4463.interrupts.packetRx = false;
   }
@@ -466,6 +469,9 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
   if (si4463.interrupts.fifoUnderflowOverflowError)
   {
 	  /* Handling this interrupt here */
+	  /* Clear RX FIFO */
+	  SI4463_ClearRxFifo(&si4463);
+	  /* Claer Chip Status errors if exists */
 	  SI4463_GetChipStatus(&si4463);
 	  /* Following instruction only for add breakpoints. May be deleted */
 	  si4463.interrupts.fifoUnderflowOverflowError = false;
@@ -512,6 +518,37 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 
   /* Clear All interrupts before exit */
   SI4463_ClearAllInterrupts(&si4463);
+}
+
+void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
+{
+	uint8_t incomingChar = 0;
+  /* Prevent unused argument(s) compilation warning */
+  UNUSED(huart);
+
+  /* Clear the buffer to prevent overrun */
+  //__HAL_UART_FLUSH_DRREGISTER(&huart1);
+
+  HAL_UART_Receive_IT(huart, incomingChar, 1);
+
+
+  byteCounter++;
+
+  if (byteCounter < RADIO_CONFIGURATION_DATA_RADIO_PACKET_LENGTH)
+  {
+	  typingMessage[byteCounter] = 0 ;
+  }
+  else
+  {
+#ifdef DEMOFEST
+	  HAL_UART_Transmit(huart, "OUT >", 5, 10);
+	  HAL_UART_Transmit(huart, typingMessage, RADIO_CONFIGURATION_DATA_RADIO_PACKET_LENGTH, 10);
+	  HAL_UART_Transmit(huart, "\n", 1, 10);
+	  SI4463_Transmit(&si4463, typingMessage, RADIO_CONFIGURATION_DATA_RADIO_PACKET_LENGTH);
+
+	  byteCounter = 0;
+#endif /*DEMOFEST*/
+  }
 }
 
 bool SI4463_IsCTS(void)

@@ -104,7 +104,7 @@ typedef struct
 {
 	void (*WriteRead)(uint8_t * pTxData, uint8_t * pRxData, uint16_t txSize);
 	void (*SetShutdown)(void);
-	void (*ClearShurdown)(void);
+	void (*ClearShutdown)(void);
 	void (*Select)(void);
 	void (*Deselect)(void);
 	void (*DelayMs)(uint32_t delayMs);
@@ -138,6 +138,7 @@ void SI4463_GetTxFifoBytesCount(si4463_t * si4463, uint8_t * bytesCount);
 void SI4463_GetRxFifoEmptyBytes(si4463_t * si4463, uint8_t * emptyBytes);
 void SI4463_ClearRxFifo(si4463_t * si4463);
 void SI4463_ClearTxFifo(si4463_t * si4463);
+void SI4463_Transmit(si4463_t * si4463, uint8_t * packet, uint8_t len);
 
 /* End of prototypes section */
 
