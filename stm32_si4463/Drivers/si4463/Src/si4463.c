@@ -10,7 +10,10 @@
 void SI4463_SendCommand(si4463_t * si4463, uint8_t * cmdChain, uint16_t cmdLen)
 {
 	uint8_t ctsData[cmdLen];
-	memset(ctsData, 0, cmdLen * sizeof(uint8_t));
+	memset(ctsData, 0, cmdLen);
+
+	/* Wait CTS signal */
+	while (!si4463->IsCTS());;
 
 	si4463->Select();
 	si4463->WriteRead(cmdChain, ctsData, cmdLen);
@@ -25,7 +28,9 @@ void SI4463_ReadCommandBuffer(si4463_t * si4463, uint8_t * cmdBuf, uint8_t cmdCh
 	uint8_t cmdChain[cmdChainLen+1];
 	memset(cmdChain, 0, cmdChainLen+1);
 	cmdChain[0] = SI4463_CMD_READ_CMD_BUF;
-	//uint8_t cmdChain[1] = {SI4463_CMD_READ_CMD_BUF};
+
+	/* Wait CTS signal */
+	while (!si4463->IsCTS());;
 
 	si4463->Select();
 	si4463->WriteRead(cmdChain, cmdBuf, sizeof(cmdChain));
@@ -55,8 +60,8 @@ void SI4463_Init(si4463_t * si4463)
 		SI4463_SendCommand(si4463, command, len);
 		currentPt += len;
 	}
-
-	SI4463_ClearAllInterrupts(si4463);
+	/* Clear all interrupts invoked during configuration */
+	//SI4463_ClearAllInterrupts(si4463);
 }
 
 
@@ -82,7 +87,7 @@ void SI4463_PowerUp(si4463_t * si4463)
 							(RADIO_CONFIGURATION_DATA_RADIO_XO_FREQ & 0x0000FF00) >> 8,
 							(RADIO_CONFIGURATION_DATA_RADIO_XO_FREQ & 0x000000FF)};
 
-	SI4463_ClearAllInterrupts(si4463);
+	//SI4463_ClearAllInterrupts(si4463);
 	SI4463_SendCommand(si4463, cmdChain, 7);
 	si4463->DelayMs(100);
 	//TODO check CTS
@@ -136,20 +141,27 @@ void SI4463_GetInterrupts(si4463_t * si4463)
 	si4463->interrupts.wut = chipPend & 0x01;
 }
 
-void SI4463_ClearAllInterrupts(si4463_t * si4463)
+void SI4463_ClearInterrupts(si4463_t * si4463)
 {
 	uint8_t answer[SI4463_CMD_BUF_LEN];
 	memset(answer, 0x00, SI4463_CMD_BUF_LEN);
 	uint8_t cmdChain[4] = {SI4463_CMD_GET_INT_STATUS, 0x00, 0x00, 0x00};
+
 	SI4463_SendCommand(si4463, cmdChain, 4);
 	SI4463_ReadCommandBuffer(si4463, answer, 9);
+}
+
+void SI4463_ClearAllInterrupts(si4463_t * si4463)
+{
+	SI4463_ClearInterrupts(si4463);
+	SI4463_ClearChipStatus(si4463);
 }
 
 void SI4463_GetPartInfo(si4463_t * si4463, uint8_t * pRxData)
 {
 	uint8_t cmdChain[1] = {SI4463_CMD_PART_INFO};
 
-	SI4463_ClearAllInterrupts(si4463);
+	//SI4463_ClearAllInterrupts(si4463);
 	SI4463_SendCommand(si4463, cmdChain, 1);
 	SI4463_ReadCommandBuffer(si4463, pRxData, 9);
 }
@@ -183,6 +195,7 @@ void SI4463_GetCurrentState(si4463_t * si4463, uint8_t * state)
 	memset(answer, 0x00, SI4463_CMD_BUF_LEN);
 	uint8_t cmdChain[1] = {SI4463_CMD_REQUEST_DEVICE_STATE};
 
+	//SI4463_ClearAllInterrupts(si4463);
 	SI4463_SendCommand(si4463, cmdChain, 1);
 	SI4463_ReadCommandBuffer(si4463, answer, 3);
 
@@ -195,6 +208,7 @@ void SI4463_SetCurrentState(si4463_t * si4463, uint8_t * state)
 	memset(answer, 0x00, SI4463_CMD_BUF_LEN);
 	uint8_t cmdChain[2] = {SI4463_CMD_CHANGE_STATE, *state};
 
+	//SI4463_ClearAllInterrupts(si4463);
 	SI4463_SendCommand(si4463, cmdChain, 1);
 	SI4463_ReadCommandBuffer(si4463, answer, 1);
 
@@ -229,7 +243,7 @@ void SI4463_StartTx(si4463_t * si4463)
 								((RADIO_CONFIGURATION_DATA_RADIO_PACKET_LENGTH & 0xFF00) >> 8) & 0x1F,
 								RADIO_CONFIGURATION_DATA_RADIO_PACKET_LENGTH & 0xFF};
 
-	SI4463_ClearAllInterrupts(si4463);
+	//SI4463_ClearAllInterrupts(si4463);
 	SI4463_SendCommand(si4463, cmdChain, 5);
 	SI4463_ReadCommandBuffer(si4463, answer, 1);
 }
@@ -243,7 +257,7 @@ void SI4463_WriteTxFifo(si4463_t * si4463, uint8_t * msg, uint8_t msgLen)
 	command[0] = SI4463_CMD_WRITE_TX_FIFO;
 	memcpy(&command[1], msg, msgLen);
 
-	SI4463_ClearAllInterrupts(si4463);
+	//SI4463_ClearAllInterrupts(si4463);
 	SI4463_SendCommand(si4463, command, sizeof(command));
 }
 
@@ -256,9 +270,59 @@ void SI4463_ReadRxFifo(si4463_t * si4463, uint8_t * msg, uint8_t msgLen)
 	memset(command, 0, msgLen+1);
 	command[0] = SI4463_CMD_READ_RX_FIFO;
 
+	while (!si4463->IsCTS());;
+
 	si4463->Select();
 	si4463->WriteRead(command, cmdBuf, sizeof(command));
 	si4463->Deselect();
 
 	memcpy(msg, &cmdBuf[1], msgLen);
+
+	while (!si4463->IsCTS());;
+}
+
+void SI4463_GetTxFifoBytesCount(si4463_t * si4463, uint8_t * bytesCount)
+{
+	uint8_t answer[SI4463_CMD_BUF_LEN];
+	memset(answer, 0x00, SI4463_CMD_BUF_LEN);
+	uint8_t cmdChain[2] = {SI4463_CMD_FIFO_INFO,
+								0x00};
+
+	//SI4463_ClearAllInterrupts(si4463);
+	SI4463_SendCommand(si4463, cmdChain, 2);
+	SI4463_ReadCommandBuffer(si4463, answer, 1);
+
+	*bytesCount = answer[3];
+}
+
+void SI4463_GetRxFifoEmptyBytes(si4463_t * si4463, uint8_t * emptyBytes)
+{
+	uint8_t answer[SI4463_CMD_BUF_LEN];
+	memset(answer, 0x00, SI4463_CMD_BUF_LEN);
+	uint8_t cmdChain[2] = {SI4463_CMD_FIFO_INFO,
+								0x00};
+
+	//SI4463_ClearAllInterrupts(si4463);
+	SI4463_SendCommand(si4463, cmdChain, 2);
+	SI4463_ReadCommandBuffer(si4463, answer, 1);
+
+	*emptyBytes = answer[2];
+}
+
+void SI4463_ClearRxFifo(si4463_t * si4463)
+{
+	uint8_t cmdChain[2] = {SI4463_CMD_FIFO_INFO,
+							0x02};
+
+	//SI4463_ClearAllInterrupts(si4463);
+	SI4463_SendCommand(si4463, cmdChain, 2);
+}
+
+void SI4463_ClearTxFifo(si4463_t * si4463)
+{
+	uint8_t cmdChain[2] = {SI4463_CMD_FIFO_INFO,
+								0x02};
+
+	//SI4463_ClearAllInterrupts(si4463);
+	SI4463_SendCommand(si4463, cmdChain, 2);
 }

@@ -60,6 +60,8 @@
 
 /* USER CODE BEGIN Private defines */
 
+#define DEMOFEST
+
 /* USER CODE END Private defines */
 
 void _Error_Handler(char *, int);

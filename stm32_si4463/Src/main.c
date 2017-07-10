@@ -41,6 +41,7 @@
 
 /* USER CODE BEGIN Includes */
 #include "si4463.h"
+#include <stdlib.h>
 
 /* USER CODE END Includes */
 
@@ -52,6 +53,7 @@ UART_HandleTypeDef huart1;
 /* USER CODE BEGIN PV */
 /* Private variables ---------------------------------------------------------*/
 si4463_t si4463;
+uint8_t incomingBuffer[RADIO_CONFIGURATION_DATA_RADIO_PACKET_LENGTH];
 
 /* USER CODE END PV */
 
@@ -110,6 +112,9 @@ int main(void)
 
   /* USER CODE BEGIN 2 */
 
+  /* Debug message on uart */
+  //HAL_UART_Transmit(&huart1, "START\n", 6, 10);
+
   /* Assign functions */
   si4463.IsCTS = SI4463_IsCTS;
   si4463.WriteRead = SI4463_WriteRead;
@@ -118,9 +123,23 @@ int main(void)
   si4463.SetShutdown = SI4463_SetShutdown;
   si4463.ClearShurdown = SI4463_ClearShutdown;
   si4463.DelayMs = HAL_Delay;
+
+  /* Disable interrupt pin for init Si4463 */
+  HAL_NVIC_DisableIRQ(EXTI0_IRQn);
+
   /* Init Si4463 with structure */
   SI4463_Init(&si4463);
-  SI4463_StartRx(&si4463);
+
+  /* Start RX packets */
+  //SI4463_ClearRxFifo(&si4463);
+  //SI4463_StartRx(&si4463);
+
+  /* Debug message on uart */
+  //HAL_UART_Transmit(&huart1, "INIT\n", 5, 10);
+
+  /* Enable interrupt pin and */
+  HAL_NVIC_EnableIRQ(EXTI0_IRQn);
+  SI4463_ClearInterrupts(&si4463);
 
   /* USER CODE END 2 */
 
@@ -131,18 +150,27 @@ int main(void)
   /* USER CODE END WHILE */
 
   /* USER CODE BEGIN 3 */
-	  //uint8_t testMessage[7] = {0xA1, 0xA2, 0xA3, 0xA4, 0xA5, 0xA6, 0xA7};
-	  //SI4463_WriteTxFifo(&si4463, testMessage, 7);
-	  //SI4463_StartTx(&si4463);
-
+	  uint8_t foo = 0x06;
+	  HAL_Delay(500);
+	  uint8_t testMessage[7] = {0, 0, 0, 0xA4, 0xA5, 0xA6, 0xA7};
+	  //testMessage[0] = rand() & 0xFF;
+	  //testMessage[1] = rand() & 0xFF;
+	  //testMessage[2] = rand() & 0xFF;
+	  //SI4463_SetCurrentState(&si4463, &currentState);
+	  SI4463_WriteTxFifo(&si4463, testMessage, 7);
+	  SI4463_GetTxFifoBytesCount(&si4463, &foo);
 	  HAL_Delay(100);
+	  SI4463_StartTx(&si4463);
+	  //HAL_UART_Transmit(&huart1, "SEND\n", 5, 10);
+	  //Doesnt work StartRx after StartTx without polling IsPacketSent
+	  //SI4463_StartRx(&si4463);
 
-	  uint8_t incoming[64] = {0};
-	  memset(incoming, 0x00, 64);
-	  SI4463_ReadRxFifo(&si4463, incoming, 64);
-
-	  uint8_t currentState = 0;
-	  SI4463_GetCurrentState(&si4463, &currentState);
+	  SI4463_GetInterrupts(&si4463);
+	  SI4463_GetCurrentState(&si4463, &foo);
+	  SI4463_ClearChipStatus(&si4463);
+	  foo = 0;
+	  HAL_Delay(100);
+	  //SI4463_StartRx(&si4463);
   }
   /* USER CODE END 3 */
 
@@ -294,7 +322,7 @@ static void MX_GPIO_Init(void)
 
   /*Configure GPIO pin : nIRQ_Pin */
   GPIO_InitStruct.Pin = nIRQ_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
+  GPIO_InitStruct.Mode = GPIO_MODE_IT_FALLING;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(nIRQ_GPIO_Port, &GPIO_InitStruct);
 
@@ -310,10 +338,11 @@ static void MX_GPIO_Init(void)
 
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 {
-  uint8_t buffer[SI4463_CMD_BUF_LEN];
-  memset(buffer, 0x00, SI4463_CMD_BUF_LEN);
   /* Prevent unused argument(s) compilation warning */
   UNUSED(GPIO_Pin);
+
+  /* Clear incoming buffer */
+  memset(incomingBuffer, 0x00, RADIO_CONFIGURATION_DATA_RADIO_PACKET_LENGTH);
 
   /* Get interrupts and work with it */
   SI4463_GetInterrupts(&si4463);
@@ -334,36 +363,52 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
   if (si4463.interrupts.packetSent)
   {
 	  /* Handling this interrupt here */
-	  /* Following instruction only for add breakpoints. May be deleted */
-	  si4463.interrupts.packetSent = false;
+	  /* Clear TX FIFO */
+	  SI4463_ClearTxFifo(&si4463);
 	  /*Toggle led for indication*/
 	  HAL_GPIO_TogglePin(LED_ONBOARD_GPIO_Port, LED_ONBOARD_Pin);
+	  /* Following instruction only for add breakpoints. May be deleted */
+	  si4463.interrupts.packetSent = false;
   }
   if (si4463.interrupts.packetRx)
   {
 	  /* Handling this interrupt here */
+	  /* Get FIFO data */
+	  SI4463_ReadRxFifo(&si4463, incomingBuffer, RADIO_CONFIGURATION_DATA_RADIO_PACKET_LENGTH);
+	  /* Clear RX FIFO */
+	  SI4463_ClearRxFifo(&si4463);
+#ifdef DEMOFEST
+	  HAL_UART_Transmit(&huart1, "IN >", 4, 10);
+	  HAL_UART_Transmit(&huart1, incomingBuffer, RADIO_CONFIGURATION_DATA_RADIO_PACKET_LENGTH, 10);
+	  HAL_UART_Transmit(&huart1, "\n", 1, 10);
+#endif /* DEMOFEST */
+	  /*Toggle led for indication*/
+	  HAL_GPIO_TogglePin(LED_ONBOARD_GPIO_Port, LED_ONBOARD_Pin);
+
 	  /* Following instruction only for add breakpoints. May be deleted */
 	  si4463.interrupts.packetRx = false;
   }
   if (si4463.interrupts.crcError)
   {
 	  /* Handling this interrupt here */
+
 	  /* Following instruction only for add breakpoints. May be deleted */
 	  si4463.interrupts.crcError = false;
   }
   if (si4463.interrupts.txFifoAlmostEmpty)
   {
 	  /* Handling this interrupt here */
+
 	  /* Following instruction only for add breakpoints. May be deleted */
 	  si4463.interrupts.txFifoAlmostEmpty = false;
   }
   if (si4463.interrupts.rxFifoAlmostFull)
   {
 	  /* Handling this interrupt here */
-	  /* Following instruction only for add breakpoints. May be deleted */
-	  si4463.interrupts.rxFifoAlmostFull = false;
 	  /*Toggle led for indication*/
 	  HAL_GPIO_TogglePin(LED_ONBOARD_GPIO_Port, LED_ONBOARD_Pin);
+	  /* Following instruction only for add breakpoints. May be deleted */
+	  si4463.interrupts.rxFifoAlmostFull = false;
   }
 
   /* Handling Modem interrupts */
@@ -414,18 +459,21 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
   if (si4463.interrupts.cal)
   {
 	  /* Handling this interrupt here */
+	  SI4463_GetChipStatus(&si4463);
 	  /* Following instruction only for add breakpoints. May be deleted */
 	  si4463.interrupts.cal = false;
   }
   if (si4463.interrupts.fifoUnderflowOverflowError)
   {
 	  /* Handling this interrupt here */
+	  SI4463_GetChipStatus(&si4463);
 	  /* Following instruction only for add breakpoints. May be deleted */
 	  si4463.interrupts.fifoUnderflowOverflowError = false;
   }
   if (si4463.interrupts.stateChange)
   {
 	  /* Handling this interrupt here */
+	  SI4463_GetChipStatus(&si4463);
 	  /* Following instruction only for add breakpoints. May be deleted */
 	  si4463.interrupts.stateChange = false;
   }
@@ -439,25 +487,28 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
   if (si4463.interrupts.chipReady)
   {
 	  /* Handling this interrupt here */
+	  SI4463_GetChipStatus(&si4463);
 	  /* Following instruction only for add breakpoints. May be deleted */
 	  si4463.interrupts.chipReady = false;
   }
   if (si4463.interrupts.lowBatt)
   {
 	  /* Handling this interrupt here */
+	  SI4463_GetChipStatus(&si4463);
 	  /* Following instruction only for add breakpoints. May be deleted */
 	  si4463.interrupts.lowBatt = false;
   }
   if (si4463.interrupts.wut)
   {
 	  /* Handling this interrupt here */
+	  SI4463_GetChipStatus(&si4463);
 	  /* Following instruction only for add breakpoints. May be deleted */
 	  si4463.interrupts.wut = false;
   }
 
-  /* GetChipStatus used for clearing Chip interrupts such CMD_ERROR
+  /* ClearChipStatus used for clearing Chip interrupts such CMD_ERROR
    * which cannot clear by SI4463_ClearAllInterrupts */
-  SI4463_GetChipStatus(&si4463);
+  SI4463_ClearChipStatus(&si4463);
 
   /* Clear All interrupts before exit */
   SI4463_ClearAllInterrupts(&si4463);

@@ -309,7 +309,7 @@
         </DataItem>
         <DataItem Type="NewWDS.Applications.App_Common.ByteStatusControl.ByteStatus" Name="bstChipInterruptStatus">
           <Enabled>True</Enabled>
-          <Value>40</Value>
+          <Value>8</Value>
         </DataItem>
       </grbChipInterrupt>
       <grbModemInterrupt Type="System.Windows.Forms.GroupBox">
@@ -318,7 +318,7 @@
         </DataItem>
         <DataItem Type="NewWDS.Applications.App_Common.ByteStatusControl.ByteStatus" Name="bstModemInterruptStatus">
           <Enabled>True</Enabled>
-          <Value>2</Value>
+          <Value>0</Value>
         </DataItem>
       </grbModemInterrupt>
       <grbPacketHandlerInterrupt Type="System.Windows.Forms.GroupBox">
@@ -327,7 +327,7 @@
         </DataItem>
         <DataItem Type="NewWDS.Applications.App_Common.ByteStatusControl.ByteStatus" Name="bstPacketHandlerInterruptStatus">
           <Enabled>True</Enabled>
-          <Value>176</Value>
+          <Value>48</Value>
         </DataItem>
       </grbPacketHandlerInterrupt>
       <grbColorDescrition Type="System.Windows.Forms.GroupBox" />

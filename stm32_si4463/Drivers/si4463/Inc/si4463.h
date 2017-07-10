@@ -57,11 +57,7 @@
 #define SI4463_CMD_READ_RX_FIFO			(0x77)
 
 #define SI4463_CMD_RX_HOP				(0x36)
-
 /* End of commands */
-
-
-
 
 /* End Define section */
 
@@ -130,6 +126,7 @@ void SI4463_GetPartInfo(si4463_t * si4463, uint8_t * pRxData);
 void SI4463_GetChipStatus(si4463_t * si4463);
 void SI4463_ClearChipStatus(si4463_t * si4463);
 void SI4463_GetInterrupts(si4463_t * si4463);
+void SI4463_ClearInterrupts(si4463_t * si4463);
 void SI4463_ClearAllInterrupts(si4463_t * si4463);
 void SI4463_GetCurrentState(si4463_t * si4463, uint8_t * state);
 void SI4463_SetCurrentState(si4463_t * si4463, uint8_t * state);
@@ -137,6 +134,10 @@ void SI4463_StartRx(si4463_t * si4463);
 void SI4463_StartTx(si4463_t * si4463);
 void SI4463_WriteTxFifo(si4463_t * si4463, uint8_t * packet, uint8_t len);
 void SI4463_ReadRxFifo(si4463_t * si4463, uint8_t * packet, uint8_t len);
+void SI4463_GetTxFifoBytesCount(si4463_t * si4463, uint8_t * bytesCount);
+void SI4463_GetRxFifoEmptyBytes(si4463_t * si4463, uint8_t * emptyBytes);
+void SI4463_ClearRxFifo(si4463_t * si4463);
+void SI4463_ClearTxFifo(si4463_t * si4463);
 
 /* End of prototypes section */
 
