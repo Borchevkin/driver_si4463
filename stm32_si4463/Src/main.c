@@ -142,7 +142,7 @@ int main(void)
    * - invoked RX_TIMEOUT;
    * - invalid receive.
    * For receiveing next packet you have to invoke SI4463_StartRx() again!*/
-  SI4463_StartRx(&si4463);
+  SI4463_StartRx(&si4463, false, false, false);
 
 #ifdef DEMOFEST
   /* Debug message on UART */
@@ -377,7 +377,7 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 	  HAL_UART_Transmit(&huart1, "\n", 1, 10);
 #endif /* DEMOFEST */
 	  /* Re-arm StartRX */
-	  SI4463_StartRx(&si4463);
+	  SI4463_StartRx(&si4463, false, false, false);
 
 	  /*Toggle led for indication*/
 	  HAL_GPIO_TogglePin(LED_ONBOARD_GPIO_Port, LED_ONBOARD_Pin);
@@ -401,7 +401,7 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 	   * It need because after successful receive a packet the chip change
 	   * state to READY.
 	   * There is re-armed mode for StartRx but it not correctly working */
-	  SI4463_StartRx(&si4463);
+	  SI4463_StartRx(&si4463, false, false, false);
 
 	  /*Toggle led for indication*/
 	  HAL_GPIO_TogglePin(LED_ONBOARD_GPIO_Port, LED_ONBOARD_Pin);
