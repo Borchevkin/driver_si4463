@@ -169,7 +169,7 @@ void SI4463_ClearInterrupts(si4463_t * si4463)
 void SI4463_ClearAllInterrupts(si4463_t * si4463)
 {
 	SI4463_ClearInterrupts(si4463);
-	SI4463_GetChipStatus(si4463);
+	SI4463_ClearChipStatus(si4463);
 }
 
 void SI4463_GetPartInfo(si4463_t * si4463, uint8_t * pRxData)

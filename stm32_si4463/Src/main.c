@@ -137,7 +137,7 @@ int main(void)
   /* Clear RX FIFO before starting RX packets */
   SI4463_ClearRxFifo(&si4463);
   /* Start RX mode.
-   * SI4463_StartRx() put a chip in non-armed mode:
+   * SI4463_StartRx() put a chip in non-armed mode in cases:
    * - successfully receive a packet;
    * - invoked RX_TIMEOUT;
    * - invalid receive.
@@ -528,10 +528,6 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 	  /* Following instruction only for add breakpoints. May be deleted */
 	  si4463.interrupts.wut = false;
   }
-
-  /* ClearChipStatus used for clearing Chip interrupts such CMD_ERROR
-   * which cannot clear by SI4463_ClearAllInterrupts */
-  SI4463_ClearChipStatus(&si4463);
 
   /* Clear All interrupts before exit */
   SI4463_ClearAllInterrupts(&si4463);
