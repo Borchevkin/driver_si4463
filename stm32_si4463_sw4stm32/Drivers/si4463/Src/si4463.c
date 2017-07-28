@@ -228,7 +228,7 @@ void SI4463_SetCurrentState(si4463_t * si4463, uint8_t * state)
 	SI4463_ReadCommandBuffer(si4463, answer, 1);
 }
 
-void SI4463_StartRx(si4463_t * si4463, bool goToRxAfterTimeout, bool goToRxAfterValid, bool goToRxAfterInvalid)
+void SI4463_StartRx(si4463_t * si4463, uint16_t len, bool goToRxAfterTimeout, bool goToRxAfterValid, bool goToRxAfterInvalid)
 {
 	uint8_t stateAfterTimeout = 0x00;
 	uint8_t stateAfterValid = 0x00;
@@ -254,8 +254,8 @@ void SI4463_StartRx(si4463_t * si4463, bool goToRxAfterTimeout, bool goToRxAfter
 	uint8_t cmdChain[8] = {SI4463_CMD_START_RX,
 							RADIO_CONFIGURATION_DATA_CHANNEL_NUMBER,
 							0x00,
-							(RADIO_CONFIGURATION_DATA_RADIO_PACKET_LENGTH & 0xFF00) >> 8,
-							RADIO_CONFIGURATION_DATA_RADIO_PACKET_LENGTH & 0xFF,
+							(len & 0xFF00) >> 8,
+							len & 0xFF,
 							stateAfterTimeout,
 							stateAfterValid,
 							stateAfterInvalid};
@@ -265,7 +265,7 @@ void SI4463_StartRx(si4463_t * si4463, bool goToRxAfterTimeout, bool goToRxAfter
 	SI4463_ReadCommandBuffer(si4463, answer, 1);
 }
 
-void SI4463_StartTx(si4463_t * si4463, bool goToRxAfterTx)
+void SI4463_StartTx(si4463_t * si4463, uint16_t len, bool goToRxAfterTx)
 {
 	uint8_t stateAfterTx = 0x00;
 	uint8_t answer[SI4463_CMD_BUF_LEN];
@@ -279,15 +279,15 @@ void SI4463_StartTx(si4463_t * si4463, bool goToRxAfterTx)
 	uint8_t cmdChain[5] = {SI4463_CMD_START_TX,
 								RADIO_CONFIGURATION_DATA_CHANNEL_NUMBER,
 								stateAfterTx,
-								((RADIO_CONFIGURATION_DATA_RADIO_PACKET_LENGTH & 0xFF00) >> 8) & 0x1F,
-								RADIO_CONFIGURATION_DATA_RADIO_PACKET_LENGTH & 0xFF};
+								((len & 0xFF00) >> 8) & 0x1F,
+								len & 0xFF};
 
 	//SI4463_ClearAllInterrupts(si4463);
 	SI4463_SendCommand(si4463, cmdChain, 5);
 	SI4463_ReadCommandBuffer(si4463, answer, 1);
 }
 
-void SI4463_WriteTxFifo(si4463_t * si4463, uint8_t * msg, uint8_t msgLen)
+void SI4463_WriteTxFifo(si4463_t * si4463, uint8_t * msg, uint16_t msgLen)
 {
 	//TODO check what len < FIFO size
 	uint8_t command[msgLen+1];
@@ -300,7 +300,7 @@ void SI4463_WriteTxFifo(si4463_t * si4463, uint8_t * msg, uint8_t msgLen)
 	SI4463_SendCommand(si4463, command, sizeof(command));
 }
 
-void SI4463_ReadRxFifo(si4463_t * si4463, uint8_t * msg, uint8_t msgLen)
+void SI4463_ReadRxFifo(si4463_t * si4463, uint8_t * msg, uint16_t msgLen)
 {
 	uint8_t cmdBuf[SI4463_MAX_RX_FIFO_LEN + 1];
 	memset(cmdBuf, 0x00, SI4463_MAX_RX_FIFO_LEN + 1);
@@ -369,5 +369,5 @@ void SI4463_ClearTxFifo(si4463_t * si4463)
 void SI4463_Transmit(si4463_t * si4463, uint8_t * packet, uint8_t len)
 {
 	SI4463_WriteTxFifo(si4463, packet, len);
-	SI4463_StartTx(si4463, true);
+	SI4463_StartTx(si4463, len, true);
 }

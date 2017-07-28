@@ -52,9 +52,11 @@ UART_HandleTypeDef huart1;
 
 /* USER CODE BEGIN PV */
 /* Private variables ---------------------------------------------------------*/
+#define APP_PACKET_LEN		((uint16_t) 10)
+
 si4463_t si4463;
-uint8_t incomingBuffer[RADIO_CONFIGURATION_DATA_RADIO_PACKET_LENGTH];
-uint8_t outgoingBuffer[RADIO_CONFIGURATION_DATA_RADIO_PACKET_LENGTH];
+uint8_t incomingBuffer[APP_PACKET_LEN];
+uint8_t outgoingBuffer[APP_PACKET_LEN];
 
 
 /* USER CODE END PV */
@@ -142,7 +144,7 @@ int main(void)
    * - invoked RX_TIMEOUT;
    * - invalid receive.
    * For receiveing next packet you have to invoke SI4463_StartRx() again!*/
-  SI4463_StartRx(&si4463, false, false, false);
+  SI4463_StartRx(&si4463, APP_PACKET_LEN, false, false, false);
 
 #ifdef DEMOFEST
   /* Debug message on UART */
@@ -172,7 +174,7 @@ int main(void)
 	  outgoingBuffer[4] = rand() & 0xFF;
 	  outgoingBuffer[5] = rand() & 0xFF;
 	  outgoingBuffer[6] = rand() & 0xFF;
-	  SI4463_Transmit(&si4463, outgoingBuffer, RADIO_CONFIGURATION_DATA_RADIO_PACKET_LENGTH);
+	  SI4463_Transmit(&si4463, outgoingBuffer, APP_PACKET_LEN);
 
 	  uint32_t newDelay = 500 + ((rand() & 0xF) * 100);
 	  HAL_Delay(newDelay);
@@ -348,7 +350,7 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
   UNUSED(GPIO_Pin);
 
   /* Clear incoming buffer */
-  memset(incomingBuffer, 0x00, RADIO_CONFIGURATION_DATA_RADIO_PACKET_LENGTH);
+  memset(incomingBuffer, 0x00, APP_PACKET_LEN);
 
   /* Get interrupts and work with it */
   SI4463_GetInterrupts(&si4463);
@@ -373,11 +375,11 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 	  SI4463_ClearTxFifo(&si4463);
 #ifdef DEMOFEST
 	  HAL_UART_Transmit(&huart1, "OUT >", 5, 10);
-	  HAL_UART_Transmit(&huart1, outgoingBuffer, RADIO_CONFIGURATION_DATA_RADIO_PACKET_LENGTH, 10);
+	  HAL_UART_Transmit(&huart1, outgoingBuffer, APP_PACKET_LEN, 10);
 	  HAL_UART_Transmit(&huart1, "\n", 1, 10);
 #endif /* DEMOFEST */
 	  /* Re-arm StartRX */
-	  SI4463_StartRx(&si4463, false, false, false);
+	  SI4463_StartRx(&si4463, APP_PACKET_LEN, false, false, false);
 
 	  /*Toggle led for indication*/
 	  HAL_GPIO_TogglePin(LED_ONBOARD_GPIO_Port, LED_ONBOARD_Pin);
@@ -388,12 +390,12 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
   {
 	  /* Handling this interrupt here */
 	  /* Get FIFO data */
-	  SI4463_ReadRxFifo(&si4463, incomingBuffer, RADIO_CONFIGURATION_DATA_RADIO_PACKET_LENGTH);
+	  SI4463_ReadRxFifo(&si4463, incomingBuffer, APP_PACKET_LEN);
 	  /* Clear RX FIFO */
 	  SI4463_ClearRxFifo(&si4463);
 #ifdef DEMOFEST
 	  HAL_UART_Transmit(&huart1, "IN >", 4, 10);
-	  HAL_UART_Transmit(&huart1, incomingBuffer, RADIO_CONFIGURATION_DATA_RADIO_PACKET_LENGTH, 10);
+	  HAL_UART_Transmit(&huart1, incomingBuffer, APP_PACKET_LEN, 10);
 	  HAL_UART_Transmit(&huart1, "\n", 1, 10);
 #endif /* DEMOFEST */
 
@@ -401,7 +403,7 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 	   * It need because after successful receive a packet the chip change
 	   * state to READY.
 	   * There is re-armed mode for StartRx but it not correctly working */
-	  SI4463_StartRx(&si4463, false, false, false);
+	  SI4463_StartRx(&si4463, APP_PACKET_LEN, false, false, false);
 
 	  /*Toggle led for indication*/
 	  HAL_GPIO_TogglePin(LED_ONBOARD_GPIO_Port, LED_ONBOARD_Pin);
