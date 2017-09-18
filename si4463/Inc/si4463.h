@@ -9,6 +9,7 @@
 #define INC_SI4463_H_
 
 #include <stdint.h>
+#include <stdbool.h>
 #include <string.h>
 #include "radio_config_Si4463.h"
 
@@ -138,7 +139,6 @@ typedef struct
 	void (*Select)(void);
 	void (*Deselect)(void);
 	void (*DelayMs)(uint32_t delayMs);
-	//uint8_t (*IsCTS)(void);
 	uint8_t (*IsClearToSend)(void);
 	si4463_interrupts_t interrupts;
 	si4463_chip_status_t chipStatus;
