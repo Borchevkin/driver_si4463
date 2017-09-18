@@ -4,7 +4,7 @@ This project purposed to implement a driver for Si4463 from Silicon Labs
 
 ## Who designed this
 
-Designed by [Lab409](http://himbiobfu.ru):
+Designed by [Lab409](http://lab409.ru):
 
 * *Danil Borchevkin*
 
