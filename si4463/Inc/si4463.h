@@ -15,17 +15,28 @@
 
 /* Define section */
 
+/* Default delays and tries */
+#define SI4463_DELAY_RESET				(1000)
+#define SI4463_DELAY_TRIES				(10)
+#define SI4463_TRIES					(200)
+
 /* Return codes */
 #define SI4463_OK						(0)
 #define SI4463_NG						(-1)
-#define SI4463_ERR_DEV_NULL				(-2)
-#define SI4463_ERR_NO_DEV_ANSWER		(-3)
-#define SI4463_ERR_NO_HW_CTS			(-4)
-#define SI4463_ERR_NO_SW_CTS			(-5)
+#define SI4463_ERR_DEV_NULL				(-10)
+#define SI4463_ERR_NO_DEV_ANSWER		(-20)
+#define SI4463_ERR_NO_HW_CTS			(-30)
+#define SI4463_ERR_NO_SW_CTS			(-40)
+#define SI4463_ERR_OVER_TX_FIFO 		(-50)
+#define SI4463_WARN_NO_HW_CTS_AFTER_CMD	(-60)
+#define SI4463_WARN_NO_SW_CTS_AFTER_CMD	(-70)
 
+/* Values for resulting functions */
+#define SI4463_VALUE_ERR				(0xFF)
 
-/* SPI return codes */
-#define SI4463_CTS						(0xFF)
+/* SPI bytes */
+#define SI4463_BYTE_CTS					(0xFF)
+#define SI4463_BYTE_DUMMY				(0x00)
 
 /*Values*/
 #define SI4463_CMD_BUF_LEN				(17)
@@ -49,6 +60,7 @@
 #define SI4463_CMD_FIFO_INFO			(0x15)
 #define SI4463_CMD_PACKET_INFO			(0x16)
 #define SI4463_CMD_IRCAL				(0x17)
+#define SI4463_CMD_IRCAL_MANUAL			(0x1A)
 #define SI4463_CMD_PROTOCOL_CFG			(0x18)
 #define SI4463_CMD_GET_INT_STATUS		(0x20)
 #define SI4463_CMD_GET_PH_STATUS		(0x21)
@@ -97,6 +109,46 @@
 /* End of const section */
 
 /* Types section */
+typedef enum
+{
+	cmdErrorNone = 0,
+	cmdErrorBadCommand = 16,
+	cmdErrorBadArg = 17,
+	cmdErrorErrorCommandBusy = 18,
+	cmdErrorBadBootMode = 49,
+	cmdErrorBadProperty = 64
+} si4463_cmd_err_status_t;
+
+typedef enum
+{
+	noState,
+	sleepState,
+	spiActiveState,
+	readyState,
+	ready2State,
+	txTuneState,
+	rxTuneState,
+	txState,
+	rxState
+} si4463_state_t;
+
+typedef enum
+{
+	global = 0x00,
+	intClt = 0x01,
+	frrCtl = 0x02,
+	preamble = 0x10,
+	sync = 0x11,
+	pkt = 0x12,
+	modem = 0x20,
+	modemChflt = 0x21,
+	pa = 0x22,
+	synth = 0x23,
+	match = 0x30,
+	freqControl = 0x40,
+	rxHop = 0x50
+} si4463_prop_group_t;
+
 typedef struct
 {
 	/* PH interrupts */
@@ -127,13 +179,13 @@ typedef struct
 
 typedef struct
 {
-	uint8_t cmdError;
+	si4463_cmd_err_status_t cmdError;
 	uint8_t cmdErrCmdId;
 } si4463_chip_status_t;
 
 typedef struct
 {
-	void (*WriteRead)(uint8_t * pTxData, uint8_t * pRxData, uint16_t txSize);
+	void (*WriteRead)(const uint8_t * pTxData, uint8_t * pRxData, const uint16_t txSize);
 	void (*SetShutdown)(void);
 	void (*ClearShutdown)(void);
 	void (*Select)(void);
@@ -148,38 +200,38 @@ typedef struct
 
 /* Prototypes section */
 
-int8_t SI4463_SendCommand(si4463_t * si4463, uint8_t * cmdChain, uint16_t cmdLen);
-int8_t SI4463_ReadCommandBuffer(si4463_t * si4463, uint8_t * cmdBuf, uint8_t cmdBufLen);
-void SI4463_Init(si4463_t * si4463);
-void SI4463_PowerUp(si4463_t * si4463);
-void SI4463_Reset(si4463_t * si4463);
-void SI4463_GetPartInfo(si4463_t * si4463, uint8_t * pRxData);
-void SI4463_GetChipStatus(si4463_t * si4463);
-void SI4463_ClearChipStatus(si4463_t * si4463);
-void SI4463_GetInterrupts(si4463_t * si4463);
-void SI4463_ClearInterrupts(si4463_t * si4463);
-void SI4463_ClearAllInterrupts(si4463_t * si4463);
-void SI4463_GetCurrentState(si4463_t * si4463, uint8_t * state);
-void SI4463_SetCurrentState(si4463_t * si4463, uint8_t * state);
-
-void SI4463_WriteTxFifo(si4463_t * si4463, uint8_t * packet, uint16_t len);
-int8_t SI4463_ReadRxFifo(si4463_t * si4463, uint8_t * packet, uint16_t len);
-uint8_t SI4463_GetTxFifoRemainBytes(si4463_t * si4463);
-uint8_t SI4463_GetRxFifoReceivedBytes(si4463_t * si4463);
-void SI4463_ClearRxFifo(si4463_t * si4463);
-void SI4463_ClearTxFifo(si4463_t * si4463);
-void SI4463_ClearSharedFifo(si4463_t * si4463);
-
-void SI4463_Transmit(si4463_t * si4463, uint8_t * packet, uint8_t len);
-
-void SI4463_StartTx(si4463_t * si4463, uint16_t len, bool goToRxAfterTx);
-void SI4463_StartRx(si4463_t * si4463, uint16_t len, bool goToRxAfterTimeout, bool goToRxAfterValid, bool goToRxAfterInvalid);
-
-int8_t SI4463_GetProperty(si4463_t * si4463, uint8_t group, uint8_t numProps, uint8_t startProp, uint8_t * data);
-void SI4463_SetProperty(si4463_t * si4463, uint8_t group, uint8_t numProps, uint8_t startProp, uint8_t * data);
-
-int8_t SI4463_SetSplitFifo(si4463_t * si4463);
-int8_t SI4463_SetHalfDuplexFifo(si4463_t * si4463);
+uint8_t SI4463_WaitCTS(const si4463_t * si4463, uint8_t times, const uint8_t delayPerTime);
+void SI4463_Reset(const si4463_t * si4463);
+int8_t SI4463_SendCommand(const si4463_t * si4463, const uint8_t * cmdChain, const uint16_t cmdLen);
+int8_t SI4463_ReadCommandBuffer(const si4463_t * si4463, uint8_t * cmdBuf, const uint8_t cmdBufLen);
+void SI4463_SendNop(const si4463_t * si4463);
+uint8_t SI4463_GetSwCts(const si4463_t * si4463);
+int8_t SI4463_WaitSwCTS(const si4463_t * si4463, uint8_t times, const uint8_t delayPerTime);
+int8_t SI4463_Init(const si4463_t * si4463);
+int8_t SI4463_VerifyInit(const si4463_t * si4463);
+int8_t SI4463_PowerUp(const si4463_t * si4463);
+int8_t SI4463_GetPartInfo(const si4463_t * si4463, uint8_t * pRxData);
+int8_t SI4463_GetChipStatus(si4463_t * si4463);
+int8_t SI4463_ClearChipStatus(const si4463_t * si4463);
+int8_t SI4463_GetInterrupts(si4463_t * si4463);
+int8_t SI4463_ClearInterrupts(const si4463_t * si4463);
+int8_t SI4463_ClearAllInterrupts(const si4463_t * si4463);
+si4463_state_t SI4463_GetCurrentState(const si4463_t * si4463);
+int8_t SI4463_SetCurrentState(const si4463_t * si4463, const si4463_state_t state);
+int8_t SI4463_WriteTxFifo(const si4463_t * si4463, const uint8_t * msg, const uint16_t msgLen);
+int8_t SI4463_ReadRxFifo(const si4463_t * si4463, uint8_t * msg, const uint16_t msgLen);
+uint8_t SI4463_GetTxFifoRemainBytes(const si4463_t * si4463);
+uint8_t SI4463_GetRxFifoReceivedBytes(const si4463_t * si4463);
+int8_t SI4463_ClearRxFifo(const si4463_t * si4463);
+int8_t SI4463_ClearTxFifo(const si4463_t * si4463);
+int8_t SI4463_ClearSharedFifo(const si4463_t * si4463);
+int8_t SI4463_Transmit(const si4463_t * si4463, const uint8_t * packet, const uint8_t len);
+int8_t SI4463_StartTx(const si4463_t * si4463, const uint16_t len, const bool goToRxAfterTx);
+int8_t SI4463_StartRx(const si4463_t * si4463, const uint16_t len, const bool goToRxAfterTimeout, const bool goToRxAfterValid, const bool goToRxAfterInvalid);
+int8_t SI4463_GetProperty(const si4463_t * si4463, const uint8_t group, const uint8_t numProps, const uint8_t startProp, uint8_t * data);
+int8_t SI4463_SetProperty(const si4463_t * si4463, const uint8_t group, const uint8_t numProps, const uint8_t startProp, const uint8_t * data);
+int8_t SI4463_SetSplitFifo(const si4463_t * si4463);
+int8_t SI4463_SetHalfDuplexFifo(const si4463_t * si4463);
 
 /* Utils */
 uint32_t SI4463_GetBytePosition(uint8_t neededByte, uint8_t * array, uint32_t arrayLen);

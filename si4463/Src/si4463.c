@@ -502,30 +502,6 @@ int8_t SI4463_ClearChipStatus(const si4463_t * si4463)
 	return result;
 }
 
-uint8_t SI4463_IsErrorAtLastCmd(const si4463_t * si4463)
-{
-	uint8_t result = 0;
-	uint8_t cmdError = 0;
-
-	/* Get chip status */
-	SI4463_GetChipStatus(si4463);
-
-	/*
-	 * CMD_ERROR value is valid only if data is interrupt CMD_ERROR is invokes
-	 * but there is some problem because problems there is without interrupts
-	 * So we can get only cmdError
-	 */
-	if (si4463->chipStatus.cmdError)
-	{
-		result = 1;
-	}
-
-	/* Clear Chip Status */
-	SI4463_ClearChipStatus(si4463);
-
-	return result;
-}
-
 si4463_state_t SI4463_GetCurrentState(const si4463_t * si4463)
 {
 	int8_t commResult = SI4463_OK;
