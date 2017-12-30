@@ -42,6 +42,10 @@ Please see [wiki of the project](https://github.com/Lab409/driver_si4463/wiki).
 
 Please see [wiki of the project](https://github.com/Lab409/driver_si4463/wiki).
 
+## How to use it
+
+We created examples for several boards. Please see [si4463 examples repo](https://github.com/Lab409/example_si4463)
+
 ## Feedback
 
 Tech questions: danil.borchevkin@lab409.ru
