@@ -1,7 +1,7 @@
 /*
  * si4463.h
  *
- *  Created on: 30 èþí. 2017 ã.
+ *  Created on: 30 ï¿½ï¿½ï¿½. 2017 ï¿½.
  *      Author: MINI
  */
 
@@ -11,6 +11,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include <string.h>
+#include "main.h"
 #include "radio_config_Si4463.h"
 
 /* Define section */
@@ -179,6 +180,25 @@ typedef struct
 
 typedef struct
 {
+	bool filter_match_pend; // If set, FILTER_MATCH interrupt is pending.
+	bool filter_miss_pend;  // If set, FILTER_MISS interrupt is pending.
+	bool packet_sent_pend; //If set, PACKET_SENT interrupt is pending.
+	bool packet_rx_pend; //If set, PACKET_RX interrupt is pending.
+	bool crc_error_pend; //If set, CRC_ERROR interrupt is pending.
+	bool tx_fifo_almost_empty_pend; //If set, TX_FIFO_ALMOST_EMPTY interrupt is pending.
+	bool rx_fifo_almost_full_pend; //If set, RX_FIFO_ALMOST_FULL interrupt is pending.
+
+	bool filter_match; //If set, incoming packet matched filter.
+	bool filter_miss; //If set, incoming packet was discarded because filter did not match
+	bool packet_sent; //If set, Packet Sent
+	bool packet_rx; //If set, Packet Received
+	bool crc_error; //If set, CRC-32 error
+	bool tx_fifo_almost_empty; //If set, TX fifo is below watermark
+	bool rx_fifo_almost_full; //If set, RX fifo is above watermark
+}si4463_ph_status_t;
+
+typedef struct
+{
 	si4463_cmd_err_status_t cmdError;
 	uint8_t cmdErrCmdId;
 } si4463_chip_status_t;
@@ -194,6 +214,7 @@ typedef struct
 	uint8_t (*IsClearToSend)(void);
 	si4463_interrupts_t interrupts;
 	si4463_chip_status_t chipStatus;
+	si4463_ph_status_t phStatus;
 } si4463_t;
 
 /* End types section */
@@ -214,6 +235,7 @@ int8_t SI4463_GetPartInfo(const si4463_t * si4463, uint8_t * pRxData);
 int8_t SI4463_GetChipStatus(si4463_t * si4463);
 int8_t SI4463_ClearChipStatus(const si4463_t * si4463);
 int8_t SI4463_GetInterrupts(si4463_t * si4463);
+int8_t SI4463_Get_PH_Status(si4463_t *si4463);
 int8_t SI4463_ClearInterrupts(const si4463_t * si4463);
 int8_t SI4463_ClearAllInterrupts(const si4463_t * si4463);
 si4463_state_t SI4463_GetCurrentState(const si4463_t * si4463);
